@@ -1,0 +1,85 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.history/
+*.sublime-project
+*.sublime-workspace
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Uploads
+app/static/uploads/
+app/static/processed/
+app/static/results/
+
+# Logs
+logs/
+*.log
+
+# Cache
+.cache/
+*.cache
+.pytest_cache/
+
+# Temp files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+
+# Testing
+.coverage
+htmlcov/
+
+# Embeddings
+*.npy
+embeddings/
+
+# Model backups
+*.h5.bak
+*.keras.bak
