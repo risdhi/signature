@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class SignaturePreprocessor:
     """Preprocess signature images for model input"""
     
-    def __init__(self, target_size=(299, 299)):
+    def __init__(self, target_size=(105, 105)):
         """
         Initialize preprocessor
         
@@ -20,7 +20,7 @@ class SignaturePreprocessor:
         """
         self.target_size = target_size
     
-    def load_image(self, image_path, color_mode='color'):
+    def load_image(self, image_path, color_mode='grayscale'):
         """
         Load image from file
         
@@ -31,16 +31,10 @@ class SignaturePreprocessor:
         Returns:
             Loaded image
         """
-        if color_mode == 'color':
-            img = cv2.imread(str(image_path))
-            if img is None:
-                raise ValueError(f"Failed to load image: {image_path}")
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        else:
-            img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
-            if img is None:
-                raise ValueError(f"Failed to load image: {image_path}")
-        
+        # Always load as grayscale
+        img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            raise ValueError(f"Failed to load image: {image_path}")
         return img
     
     def to_grayscale(self, image):
@@ -86,21 +80,22 @@ class SignaturePreprocessor:
             Denoised image
         """
         if len(image.shape) == 3 and image.shape[2] == 3:
+            # Use positional arguments for OpenCV 4.8.1 compatibility
             denoised = cv2.fastNlMeansDenoisingColored(
                 image,
                 None,
-                h=h,
-                hForColorComponents=h,
-                templateWindowSize=template_size,
-                searchWindowSize=search_size
+                h,
+                h,
+                template_size,
+                search_size
             )
         else:
             denoised = cv2.fastNlMeansDenoising(
                 image,
                 None,
-                h=h,
-                templateWindowSize=template_size,
-                searchWindowSize=search_size
+                h,
+                template_size,
+                search_size
             )
         return denoised
     

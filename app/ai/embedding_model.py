@@ -1,5 +1,7 @@
+# pyrefly: ignore [missing-import]
 import numpy as np
 import tensorflow as tf
+# pyrefly: ignore [missing-import]
 from tensorflow.keras.preprocessing import image
 import logging
 from app.ai.load_model import get_embedding_model
@@ -22,23 +24,21 @@ class EmbeddingExtractor:
     
     def preprocess_image(self, image_path):
         """
-        Preprocess image for model input
-        
+        Preprocess image for model input (105x105 grayscale)
         Args:
             image_path: Path to image file
-            
         Returns:
             Preprocessed image array
         """
         try:
-            # Load image
-            img = image.load_img(image_path, target_size=self.input_shape, color_mode='rgb')
+            # Load image as grayscale and resize
+            img = image.load_img(image_path, target_size=self.input_shape, color_mode='grayscale')
             img_array = image.img_to_array(img)
-            img_array = np.expand_dims(img_array, axis=0)
-            
-            # Normalize to [0, 1] or [-1, 1] depending on model
-            img_array = img_array / 255.0
-            
+            # Ensure shape is (105, 105, 1)
+            if img_array.shape[-1] != 1:
+                img_array = np.expand_dims(img_array[..., 0], axis=-1)
+            img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+            img_array = img_array / 255.0  # Normalize
             logger.debug(f"Image preprocessed: {img_array.shape}")
             return img_array
         except Exception as e:

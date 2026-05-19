@@ -1,4 +1,5 @@
 import os
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
 from datetime import timedelta
 
@@ -34,7 +35,7 @@ class Config:
     
     # AI Model
     MODEL_PATH = os.getenv('MODEL_PATH', os.path.join(
-        os.path.dirname(__file__), '..', 'model', 'siamese_signature_model.keras'
+        os.path.dirname(__file__), '..', 'model', 'siamese_signature_model.h5'
     ))
     
     # Siamese Network Configuration
@@ -43,7 +44,8 @@ class Config:
     DISTANCE_THRESHOLD = float(os.getenv('DISTANCE_THRESHOLD', 0.25))
     
     # Image Preprocessing
-    IMG_SIZE = (299, 299)  # Standard size for most pretrained models
+    IMG_SIZE = (105, 105)  # Match actual Siamese model input shape
+    IMG_CHANNELS = 1      # Grayscale (1 channel)
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)

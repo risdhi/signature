@@ -1,6 +1,7 @@
 import os
 import json
 import time
+# pyrefly: ignore [missing-import]
 import numpy as np
 from pathlib import Path
 import logging
@@ -40,14 +41,20 @@ class SiasesePredictorWrapper:
         try:
             logger.info("Initializing SiamesePredictorWrapper...")
             
+            # Load pretrained model FIRST
+            from app.ai.load_model import load_pretrained_model
+            model_path = self.config.get('MODEL_PATH', 'model/siamese_signature_model.h5')
+            embedding_dim = self.config.get('EMBEDDING_DIM', 128)
+            load_pretrained_model(model_path, embedding_dim)
+            
             # Initialize embedding extractor
-            self.embedding_extractor = get_embedding_extractor(self.config.IMG_SIZE)
+            self.embedding_extractor = get_embedding_extractor(self.config.get('IMG_SIZE', (299, 299)))
             
             # Initialize verification engine with thresholds from config
             self.verification_engine = VerificationEngine(
-                cosine_threshold=self.config.SIMILARITY_THRESHOLD,
-                distance_threshold=self.config.DISTANCE_THRESHOLD,
-                voting_threshold=getattr(self.config, 'VOTING_THRESHOLD', 0.7)
+                cosine_threshold=self.config.get('SIMILARITY_THRESHOLD', 0.82),
+                distance_threshold=self.config.get('DISTANCE_THRESHOLD', 0.25),
+                voting_threshold=self.config.get('VOTING_THRESHOLD', 0.7)
             )
             
             self.is_initialized = True
@@ -211,9 +218,9 @@ class SiasesePredictorWrapper:
             logger.info(f"Verifying signature for user {user_id} against {len(reference_sigs)} reference signatures")
             
             # Create output paths
-            processed_path = os.path.join(config.PROCESSED_FOLDER,
+            processed_path = os.path.join(config.get('PROCESSED_FOLDER', 'static/processed'),
                                          f'user_{user_id}_test_{timestamp.timestamp()}_processed.png')
-            result_path = os.path.join(config.RESULTS_FOLDER,
+            result_path = os.path.join(config.get('RESULTS_FOLDER', 'static/results'),
                                       f'user_{user_id}_result_{timestamp.timestamp()}.json')
             
             # Preprocess test image and extract embedding

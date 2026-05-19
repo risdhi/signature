@@ -95,9 +95,9 @@
         <div class="similarity-details">
             <h3>📈 Similarity with Each Reference</h3>
             <div class="similarity-list">
-                {% for idx, similarity in enumerate(history.similarity_scores) %}
+                {% for similarity in history.similarity_scores %}
                 <div class="similarity-item">
-                    <span>Reference #{{ idx + 1 }}</span>
+                    <span>Reference #{{ loop.index }}</span>
                     <div class="similarity-bar-small">
                         <div class="similarity-fill" style="width: {{ similarity * 100 }}%"></div>
                     </div>

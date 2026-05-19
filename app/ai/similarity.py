@@ -1,4 +1,6 @@
+# pyrefly: ignore [missing-import]
 import numpy as np
+# pyrefly: ignore [missing-import]
 from scipy.spatial.distance import cosine, euclidean
 import logging
 
