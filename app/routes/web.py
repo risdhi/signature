@@ -14,6 +14,28 @@ logger = logging.getLogger(__name__)
 web_bp = Blueprint('web', __name__)
 
 
+@web_bp.route('/user/<int:user_id>')
+def user_portal(user_id):
+    """User portal - upload & verify in one page"""
+    try:
+        user = db.session.query(User).filter_by(id=user_id).first()
+        if not user:
+            flash('User tidak ditemukan', 'error')
+            return redirect(url_for('web.register'))
+
+        sig_count = user.reference_signatures.count()
+        histories = user.verification_history.order_by(
+            VerificationHistory.verification_date.desc()
+        ).limit(10).all()
+
+        return render_template('user_portal.html', user=user, sig_count=sig_count, histories=histories)
+    except Exception as e:
+        logger.error(f"Error in user_portal: {str(e)}")
+        flash(f'Error: {str(e)}', 'error')
+        return redirect(url_for('web.index'))
+
+
+
 @web_bp.route('/')
 def index():
     """Dashboard"""
