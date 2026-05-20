@@ -146,8 +146,8 @@
     <div class="card-header">
       <div class="card-icon icon-upload">📤</div>
       <div>
-        <h3>Upload Tanda Tangan</h3>
-        <p>Daftarkan 2–5 tanda tangan asli sebagai referensi</p>
+        <h3>Upload Referensi Tanda Tangan</h3>
+        <p>Daftarkan 2–5 tanda tangan asli untuk disimpan dalam database.</p>
       </div>
     </div>
     <div class="card-body">
@@ -169,98 +169,13 @@
         </div>
         <div class="preview-grid" id="previewGrid" style="display:none"></div>
         <p class="hint" id="fileCount"></p>
-        <button type="submit" class="btn-portal btn-upload">📤 Upload & Daftarkan</button>
+        <button type="submit" class="btn-portal btn-upload">📤 Upload & Simpan</button>
       </form>
-    </div>
-  </div>
 
-  {# ── VERIFY CARD ── #}
-  <div class="portal-card">
-    <div class="card-header">
-      <div class="card-icon icon-verify">🔍</div>
-      <div>
-        <h3>Verifikasi Tanda Tangan</h3>
-        <p>Periksa apakah tanda tangan asli atau palsu</p>
-      </div>
-    </div>
-    <div class="card-body">
-      {% if not user.is_registered %}
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <p>Upload tanda tangan referensi terlebih dahulu sebelum verifikasi.</p>
-      </div>
+      {% if user.is_registered %}
+      <div class="hint">Anda sudah memiliki {{ sig_count }} tanda tangan terdaftar. Tambahkan file baru untuk memperbarui referensi.</div>
       {% else %}
-      <form method="POST" action="{{ url_for('web.verify', user_id=user.id) }}" enctype="multipart/form-data" id="verifyForm">
-        <div class="drop-zone" id="dropZoneVerify" onclick="document.getElementById('verifyFile').click()">
-          <div class="dz-icon">🔬</div>
-          <p><strong>Klik atau seret file tanda tangan uji</strong></p>
-          <p>1 file saja · PNG, JPG, BMP</p>
-          <input type="file" id="verifyFile" name="file" accept=".png,.jpg,.jpeg,.bmp,.gif">
-        </div>
-        <div id="verifyPreview" style="display:none;margin-bottom:1rem">
-          <img id="verifyImg" class="preview-img" style="width:100%;aspect-ratio:auto;max-height:160px;object-fit:contain;" src="" alt="Preview">
-        </div>
-        <button type="submit" class="btn-portal btn-verify">🔍 Mulai Verifikasi</button>
-      </form>
-      {% endif %}
-    </div>
-  </div>
-
-  {# ── HISTORY CARD ── #}
-  <div class="portal-card history-card">
-    <div class="card-header">
-      <div class="card-icon icon-history">📋</div>
-      <div>
-        <h3>Riwayat Verifikasi</h3>
-        <p>{{ histories|length }} verifikasi terakhir</p>
-      </div>
-    </div>
-    <div class="card-body">
-      {% if histories %}
-      <table class="hist-table">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>Hasil</th>
-            <th>Confidence</th>
-            <th>Cocok</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for h in histories %}
-          <tr>
-            <td>{{ h.verification_date.strftime('%d %b %Y %H:%M') }}</td>
-            <td>
-              {% if h.prediction == 'GENUINE' %}
-                <span class="pill-genuine">✓ ASLI</span>
-              {% else %}
-                <span class="pill-forged">✕ PALSU</span>
-              {% endif %}
-            </td>
-            <td>
-              <div class="confidence-mini">
-                <div class="mini-bar">
-                  {% if h.prediction == 'GENUINE' %}
-                  <div class="mini-fill-genuine" style="width:{{ h.confidence }}%"></div>
-                  {% else %}
-                  <div class="mini-fill-forged" style="width:{{ h.confidence }}%"></div>
-                  {% endif %}
-                </div>
-                <span>{{ "%.0f"|format(h.confidence) }}%</span>
-              </div>
-            </td>
-            <td>{{ h.matched_signatures }}/{{ h.total_signatures }}</td>
-            <td><a href="{{ url_for('web.result', user_id=user.id, history_id=h.id) }}" style="color:#a78bfa;font-size:0.8rem;">Detail →</a></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <div class="empty-state">
-        <div class="empty-icon">📭</div>
-        <p>Belum ada riwayat verifikasi.</p>
-      </div>
+      <div class="hint">Silakan unggah minimal 2 tanda tangan asli untuk mulai.</div>
       {% endif %}
     </div>
   </div>

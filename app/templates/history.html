@@ -1,269 +1,118 @@
-{% extends "base.html" %}
-
-{% block title %}Verification History - Signature Verification{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Verification History - Signature
+Verification{% endblock %} {% block content %}
 <section class="history-section">
-    <h2>Verification History</h2>
-    <p class="subtitle">User: <strong>{{ user.username }}</strong> | Total Verifications: <strong>{{ verifications.total }}</strong></p>
+  <h2>Verification History</h2>
+  <p class="subtitle">
+    User: <strong>{{ user.username }}</strong> | Total Verifications:
+    <strong>{{ verifications.total }}</strong>
+  </p>
 
-    {% if verifications.items %}
-    <div class="history-container">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Prediction</th>
-                    <th>Confidence</th>
-                    <th>Similarity</th>
-                    <th>Distance</th>
-                    <th>Matched</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for verification in verifications.items %}
-                <tr>
-                    <td>{{ verification.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                    <td>
-                        <span class="badge {% if verification.prediction == 'GENUINE' %}badge-success{% else %}badge-error{% endif %}">
-                            {{ verification.prediction }}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="confidence-mini">
-                            <div class="confidence-bar-mini">
-                                <div class="confidence-fill-mini" style="width: {{ verification.confidence }}%"></div>
-                            </div>
-                            <span>{{ "%.1f"|format(verification.confidence) }}%</span>
-                        </div>
-                    </td>
-                    <td>{{ "%.4f"|format(verification.average_similarity or 0) }}</td>
-                    <td>{{ "%.4f"|format(verification.euclidean_distance or 0) }}</td>
-                    <td>{{ verification.matched_signatures }}/{{ verification.total_signatures }}</td>
-                    <td>
-                        <a href="{{ url_for('web.result', user_id=user.id, history_id=verification.id) }}" 
-                           class="btn-small btn-info">View</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  {% if verifications.items %}
+  <div class="history-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Prediction</th>
+          <th>Confidence</th>
+          <th>Similarity</th>
+          <th>Distance</th>
+          <th>Matched</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for verification in verifications.items %}
+        <tr>
+          <td>
+            {{ verification.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}
+          </td>
+          <td>
+            <span
+              class="badge {% if verification.prediction == 'GENUINE' %}badge-success{% else %}badge-error{% endif %}"
+            >
+              {{ verification.prediction }}
+            </span>
+          </td>
+          <td>
+            <div class="confidence-mini">
+              <div class="confidence-bar-mini">
+                <div
+                  class="confidence-fill-mini"
+                  style="width: {{ verification.confidence }}%"
+                ></div>
+              </div>
+              <span>{{ "%.1f"|format(verification.confidence) }}%</span>
+            </div>
+          </td>
+          <td>{{ "%.4f"|format(verification.average_similarity or 0) }}</td>
+          <td>{{ "%.4f"|format(verification.euclidean_distance or 0) }}</td>
+          <td>
+            {{ verification.matched_signatures }}/{{
+            verification.total_signatures }}
+          </td>
+          <td>
+            <a
+              href="{{ url_for('web.result', user_id=user.id, history_id=verification.id) }}"
+              class="btn-small btn-info"
+              >View</a
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-        <!-- Pagination -->
-        {% if verifications.pages > 1 %}
-        <div class="pagination">
-            {% if verifications.has_prev %}
-                <a href="{{ url_for('web.history', user_id=user.id, page=verifications.prev_num) }}" 
-                   class="page-link">&laquo; Previous</a>
-            {% endif %}
-
-            {% for page_num in verifications.iter_pages(left_edge=1, left_margin=1, right_margin=1, right_edge=1) %}
-                {% if page_num %}
-                    {% if page_num == verifications.page %}
-                        <span class="page-link active">{{ page_num }}</span>
-                    {% else %}
-                        <a href="{{ url_for('web.history', user_id=user.id, page=page_num) }}" 
-                           class="page-link">{{ page_num }}</a>
-                    {% endif %}
-                {% else %}
-                    <span class="page-link disabled">...</span>
-                {% endif %}
-            {% endfor %}
-
-            {% if verifications.has_next %}
-                <a href="{{ url_for('web.history', user_id=user.id, page=verifications.next_num) }}" 
-                   class="page-link">Next &raquo;</a>
-            {% endif %}
-        </div>
-        {% endif %}
-    </div>
-
-    {% else %}
-    <div class="empty-state">
-        <p>No verifications yet.</p>
-        <a href="{{ url_for('web.verify', user_id=user.id) }}" class="btn btn-primary">Start Verification</a>
+    <!-- Pagination -->
+    {% if verifications.pages > 1 %}
+    <div class="pagination">
+      {% if verifications.has_prev %}
+      <a
+        href="{{ url_for('web.history', user_id=user.id, page=verifications.prev_num) }}"
+        class="page-link"
+        >&laquo; Previous</a
+      >
+      {% endif %} {% for page_num in verifications.iter_pages(left_edge=1,
+      left_margin=1, right_margin=1, right_edge=1) %} {% if page_num %} {% if
+      page_num == verifications.page %}
+      <span class="page-link active">{{ page_num }}</span>
+      {% else %}
+      <a
+        href="{{ url_for('web.history', user_id=user.id, page=page_num) }}"
+        class="page-link"
+        >{{ page_num }}</a
+      >
+      {% endif %} {% else %}
+      <span class="page-link disabled">...</span>
+      {% endif %} {% endfor %} {% if verifications.has_next %}
+      <a
+        href="{{ url_for('web.history', user_id=user.id, page=verifications.next_num) }}"
+        class="page-link"
+        >Next &raquo;</a
+      >
+      {% endif %}
     </div>
     {% endif %}
+  </div>
 
-    <div class="action-buttons">
-        <a href="{{ url_for('web.verify', user_id=user.id) }}" class="btn btn-primary">Verify Another</a>
-        <a href="{{ url_for('web.index') }}" class="btn btn-outline">Dashboard</a>
-    </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No verifications yet.</p>
+    <a
+      href="{{ url_for('web.verify', user_id=user.id) }}"
+      class="btn btn-primary"
+      >Start Verification</a
+    >
+  </div>
+  {% endif %}
+
+  <div class="action-buttons">
+    <a
+      href="{{ url_for('web.verify', user_id=user.id) }}"
+      class="btn btn-primary"
+      >Verify Another</a
+    >
+    <a href="{{ url_for('web.index') }}" class="btn btn-outline">Dashboard</a>
+  </div>
 </section>
-
-<style>
-.history-section {
-    max-width: 1000px;
-    margin: 2rem auto;
-    padding: 2rem;
-}
-
-.history-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-
-.table {
-    margin: 0;
-    border-radius: 0;
-}
-
-.badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.badge-success {
-    background: #d4edda;
-    color: #155724;
-}
-
-.badge-error {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.confidence-mini {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.confidence-bar-mini {
-    width: 60px;
-    height: 8px;
-    background: #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.confidence-fill-mini {
-    height: 100%;
-    background: #0066cc;
-    transition: width 0.3s ease;
-}
-
-.btn-small {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-    text-decoration: none;
-    border-radius: 4px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s;
-    display: inline-block;
-}
-
-.btn-info {
-    background: #0066cc;
-    color: white;
-}
-
-.btn-info:hover {
-    background: #0052a3;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.page-link {
-    display: inline-block;
-    padding: 0.5rem 0.75rem;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    color: #0066cc;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.page-link:hover {
-    background: #0066cc;
-    color: white;
-}
-
-.page-link.active {
-    background: #0066cc;
-    color: white;
-    border-color: #0066cc;
-    cursor: default;
-}
-
-.page-link.disabled {
-    cursor: not-allowed;
-    color: #999;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.empty-state p {
-    color: #999;
-    margin-bottom: 1.5rem;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin: 2rem 0;
-    flex-wrap: wrap;
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s;
-    display: inline-block;
-}
-
-.btn-primary {
-    background: #0066cc;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #0052a3;
-    transform: translateY(-2px);
-}
-
-.btn-outline {
-    background: white;
-    color: #0066cc;
-    border: 2px solid #0066cc;
-}
-
-.btn-outline:hover {
-    background: #0066cc;
-    color: white;
-}
-
-.subtitle {
-    color: #666;
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
-}
-</style>
 {% endblock %}

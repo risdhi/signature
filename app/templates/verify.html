@@ -1,206 +1,88 @@
-{% extends "base.html" %}
-
-{% block title %}Verify Signature - Signature Verification{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Verify Signature - Signature
+Verification{% endblock %} {% block content %}
 <section class="verify-section">
-    <h2>Verify Signature</h2>
-    <p class="subtitle">User: <strong>{{ user.username }}</strong> | Reference Signatures: <strong>{{ reference_count }}</strong></p>
+  <h2>Verify Signature</h2>
+  <p class="subtitle">
+    User: <strong>{{ user.username }}</strong> | Reference Signatures:
+    <strong>{{ reference_count }}</strong>
+  </p>
 
-    <div class="verify-container">
-        <form method="POST" enctype="multipart/form-data" class="verify-form">
-            <div class="form-group">
-                <label for="file">Select Signature to Verify *</label>
-                <div class="file-upload">
-                    <input type="file" id="file" name="file" accept="image/*" required>
-                    <label for="file" class="file-label">
-                        <span class="upload-icon">📷</span>
-                        <span>Click to select signature</span>
-                    </label>
-                </div>
-                <small id="fileName"></small>
-            </div>
+  <div class="verify-container">
+    <form method="POST" enctype="multipart/form-data" class="verify-form">
+      <div class="form-group">
+        <label for="file">Select Signature to Verify *</label>
+        <div class="file-upload">
+          <input type="file" id="file" name="file" accept="image/*" required />
+          <label for="file" class="file-label">
+            <span class="upload-icon">📷</span>
+            <span>Click to select signature</span>
+          </label>
+        </div>
+        <small id="fileName"></small>
+      </div>
 
-            <div id="preview" class="preview-container" style="display: none;">
-                <img id="previewImg" src="" alt="Preview">
-                <button type="button" class="btn-secondary" onclick="clearPreview()">Change</button>
-            </div>
+      <div id="preview" class="preview-container" style="display: none">
+        <img id="previewImg" src="" alt="Preview" />
+        <button type="button" class="btn-secondary" onclick="clearPreview()">
+          Change
+        </button>
+      </div>
 
-            <button type="submit" class="btn btn-primary btn-block" id="verifyBtn">Verify Signature</button>
-        </form>
-    </div>
+      <button type="submit" class="btn btn-primary btn-block" id="verifyBtn">
+        Verify Signature
+      </button>
+    </form>
+  </div>
 
-    <div class="info-box">
-        <h3>📋 Verification Information</h3>
-        <ul>
-            <li>Your signature will be compared to {{ reference_count }} reference signatures</li>
-            <li>The system will compute similarity scores</li>
-            <li>Result: GENUINE or FORGED</li>
-            <li>Confidence score will be displayed</li>
-        </ul>
-    </div>
+  <div class="info-box">
+    <h3>📋 Verification Information</h3>
+    <ul>
+      <li>
+        Your signature will be compared to {{ reference_count }} reference
+        signatures
+      </li>
+      <li>The system will compute similarity scores</li>
+      <li>Result: GENUINE or FORGED</li>
+      <li>Confidence score will be displayed</li>
+    </ul>
+  </div>
 
-    <div class="action-links">
-        <a href="{{ url_for('web.history', user_id=user.id) }}" class="link-button">View History</a>
-        <a href="{{ url_for('web.register') }}" class="link-button">Register Another User</a>
-    </div>
+  <div class="action-links">
+    <a href="{{ url_for('web.history', user_id=user.id) }}" class="link-button"
+      >View History</a
+    >
+    <a href="{{ url_for('web.register') }}" class="link-button"
+      >Register Another User</a
+    >
+  </div>
 </section>
 
-<style>
-.verify-section {
-    max-width: 600px;
-    margin: 2rem auto;
-}
-
-.verify-container {
-    background: white;
-    border-radius: 8px;
-    padding: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin: 1.5rem 0;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    color: #333;
-}
-
-.file-upload {
-    position: relative;
-    margin: 1rem 0;
-}
-
-.file-upload input {
-    display: none;
-}
-
-.file-label {
-    display: block;
-    border: 2px dashed #0066cc;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    background: #f9f9f9;
-}
-
-.file-label:hover {
-    border-color: #0052a3;
-    background: #f0f7ff;
-}
-
-.file-upload input:focus + .file-label {
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
-}
-
-.upload-icon {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 0.5rem;
-}
-
-.preview-container {
-    margin: 1.5rem 0;
-    text-align: center;
-}
-
-.preview-container img {
-    max-width: 100%;
-    max-height: 300px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-}
-
-.info-box {
-    background: #e3f2fd;
-    border-left: 4px solid #0066cc;
-    padding: 1.5rem;
-    border-radius: 4px;
-    margin: 1.5rem 0;
-}
-
-.action-links {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin: 2rem 0;
-}
-
-.link-button {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    background: white;
-    color: #0066cc;
-    border: 2px solid #0066cc;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s;
-    cursor: pointer;
-}
-
-.link-button:hover {
-    background: #0066cc;
-    color: white;
-}
-
-small {
-    display: block;
-    margin-top: 0.5rem;
-    color: #666;
-}
-
-#fileName {
-    color: #28a745;
-    font-weight: 600;
-}
-</style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('file');
-    const fileName = document.getElementById('fileName');
-    const preview = document.getElementById('preview');
-    const previewImg = document.getElementById('previewImg');
+  document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById("file");
+    const fileName = document.getElementById("fileName");
+    const preview = document.getElementById("preview");
+    const previewImg = document.getElementById("previewImg");
 
-    fileInput.addEventListener('change', function(e) {
-        if (this.files && this.files[0]) {
-            const file = this.files[0];
-            fileName.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                previewImg.src = event.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
+    fileInput.addEventListener("change", function (e) {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        fileName.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          previewImg.src = event.target.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
     });
 
-    window.clearPreview = function() {
-        fileInput.value = '';
-        fileName.textContent = '';
-        preview.style.display = 'none';
+    window.clearPreview = function () {
+      fileInput.value = "";
+      fileName.textContent = "";
+      preview.style.display = "none";
     };
-});
+  });
 </script>
 {% endblock %}

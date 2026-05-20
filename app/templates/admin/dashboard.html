@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SigVerify.AI | Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#191f31",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#c7c4d7",
+                        "primary": "#c0c1ff",
+                        "on-background": "#dce1fb",
+                        "on-primary-fixed": "#07006c",
+                        "secondary-fixed": "#6ffbbe",
+                        "outline": "#908fa0",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "surface-container-highest": "#2e3447",
+                        "on-surface": "#dce1fb",
+                        "surface-variant": "#2e3447",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-secondary-fixed": "#002113",
+                        "surface": "#0c1324",
+                        "inverse-primary": "#494bd6",
+                        "primary-fixed": "#e1e0ff",
+                        "inverse-surface": "#dce1fb",
+                        "secondary-container": "#00a572",
+                        "tertiary-container": "#ff5168",
+                        "surface-bright": "#33394c",
+                        "error-container": "#93000a",
+                        "secondary": "#4edea3",
+                        "on-tertiary-fixed-variant": "#920028",
+                        "error": "#ffb4ab",
+                        "tertiary": "#ffb3b6",
+                        "on-error": "#690005",
+                        "on-primary-container": "#0d0096",
+                        "primary-container": "#8083ff",
+                        "on-primary": "#1000a9",
+                        "on-tertiary-container": "#5b0015",
+                        "surface-tint": "#c0c1ff",
+                        "surface-container-high": "#23293c",
+                        "tertiary-fixed-dim": "#ffb3b6",
+                        "tertiary-fixed": "#ffdada",
+                        "background": "#0c1324",
+                        "on-secondary": "#003824",
+                        "outline-variant": "#464554",
+                        "on-tertiary": "#68001a",
+                        "on-tertiary-fixed": "#40000c",
+                        "surface-container-low": "#151b2d",
+                        "surface-container-lowest": "#070d1f",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-secondary-container": "#00311f",
+                        "inverse-on-surface": "#2a3043",
+                        "surface-dim": "#0c1324"
+                    },
+                    "spacing": {
+                        "xs": "8px",
+                        "lg": "40px",
+                        "md": "24px",
+                        "xl": "64px",
+                        "sm": "16px",
+                        "base": "4px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["JetBrains Mono"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "status-caps": ["Geist"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #070d1f; color: #dce1fb; font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(25, 31, 49, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(70, 69, 84, 0.3);
+            border-top: 1px solid rgba(192, 193, 255, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .neon-glow-primary { box-shadow: 0 0 20px rgba(192, 193, 255, 0.15); }
+        .table-row-hover:hover { background: rgba(46, 52, 71, 0.4); }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md w-full">
+      {% for category, message in messages %}
+        <div class="p-4 rounded-xl shadow-2xl backdrop-blur-xl border flex items-center justify-between transition-all duration-300 transform translate-y-0
+          {% if category == 'success' %}
+            bg-emerald-950/80 text-emerald-300 border-emerald-500/30
+          {% elif category == 'error' %}
+            bg-rose-950/80 text-rose-300 border-rose-500/30
+          {% elif category == 'warning' %}
+            bg-amber-950/80 text-amber-300 border-amber-500/30
+          {% else %}
+            bg-blue-950/80 text-blue-300 border-blue-500/30
+          {% endif %}"
+          role="alert"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined">
+              {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% elif category == 'warning' %}warning{% else %}info{% endif %}
+            </span>
+            <span class="font-body-md text-sm">{{ message }}</span>
+          </div>
+          <button class="text-on-surface-variant hover:text-white ml-4 font-bold" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- SideNavBar Component -->
+<aside class="flex flex-col h-full sticky top-0 left-0 h-screen w-64 border-r border-outline-variant/20 bg-surface-container-low/60 backdrop-blur-xl shrink-0 z-40">
+<div class="p-6">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter mb-8">SigVerify.AI</h1>
+<div class="mb-8 flex items-center space-x-3 p-3 glass-card rounded-xl">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary/30">
+<img alt="Admin Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbFcLw6HIB3NqLtMnDtVqA9cOey8E7hhfQcTo45sl47mlL_1O8k232jaJFwboMe_UK2cwNw2WRUO5xdhhqqQKwMewsHVYDhxf3owR-msg6LdGpcGl8OBQSXM-Re9CBU7Vk0RIMSIilpTF1BweJBwf1yziJ2YJXtd5LUXCRbySHOy_RLRKvy5eZDzUHC5570S00mWkQ0K3JTsPzBsNU7tMXRDjsfIPNKVXrHYCXuwefyIhIXPNDYRbwXgm7qALKB1bmrPUPtML6evdN"/>
+</div>
+<div>
+<p class="font-body-md text-sm font-bold text-on-surface">SigVerify Admin</p>
+<p class="font-label-sm text-[10px] text-primary">System Controller</p>
+</div>
+</div>
+<nav class="space-y-2">
+<!-- Active Tab: Dashboard -->
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary/10 text-primary border-r-4 border-primary transition-all duration-200 ease-in-out" href="{{ url_for('web.admin_dashboard') }}">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant/30 transition-all duration-200 ease-in-out" href="{{ url_for('web.register') }}">
+<span class="material-symbols-outlined">person_add</span>
+<span class="font-label-sm text-label-sm">Registrasi Baru</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 space-y-4">
+    
+<div class="pt-4 border-t border-outline-variant/20 space-y-2">
+<a class="flex items-center space-x-3 px-4 py-2 text-on-surface-variant hover:text-error transition-colors" href="{{ url_for('web.logout') }}">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-sm text-label-sm">Keluar</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-margin-desktop overflow-y-auto relative">
+<!-- Background Ambient Glows -->
+<div class="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10"></div>
+<div class="fixed bottom-0 left-64 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10"></div>
+<header class="flex justify-between items-end mb-xl">
+<div>
+<p class="font-label-sm text-primary mb-2">SISTEM KENDALI UTAMA</p>
+<h2 class="font-headline-lg text-on-surface">Dashboard Overview</h2>
+</div>
+</header>
+<!-- Metrics Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
+<div class="glass-card p-6 rounded-2xl transition-transform hover:scale-[1.02] duration-300">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">group</span>
+<span class="text-xs font-label-sm text-secondary">Sistem Aktif</span>
+</div>
+<p class="font-label-sm text-on-surface-variant mb-1">Total Pengguna</p>
+<h3 class="font-display-lg text-4xl text-on-surface">{{ stats.get('total_users', 0) }}</h3>
+</div>
+<div class="glass-card p-6 rounded-2xl transition-transform hover:scale-[1.02] duration-300">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">analytics</span>
+<span class="text-xs font-label-sm text-secondary">Total Scans</span>
+</div>
+<p class="font-label-sm text-on-surface-variant mb-1">Total Verifikasi</p>
+<h3 class="font-display-lg text-4xl text-on-surface">{{ stats.get('total_verifications', 0) }}</h3>
+</div>
+<div class="glass-card p-6 rounded-2xl transition-transform hover:scale-[1.02] duration-300">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">verified</span>
+<span class="text-xs font-label-sm text-primary">Rata-Rata</span>
+</div>
+<p class="font-label-sm text-on-surface-variant mb-1">Tingkat Keyakinan (Confidence)</p>
+<h3 class="font-display-lg text-4xl text-on-surface">{{ "%.1f"|format(stats.get('avg_confidence', 0)) }}%</h3>
+</div>
+</div>
+
+<!-- Users List Section -->
+<section class="mb-xl">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-on-surface">Basis Data Pengguna</h3>
+<a href="{{ url_for('web.register') }}" class="px-4 py-2 text-xs font-label-sm bg-primary text-on-primary-container rounded-lg hover:shadow-[0_0_15px_rgba(192,193,255,0.3)] transition-all font-bold">+ Daftar Pengguna Baru</a>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-separate border-spacing-y-3">
+<thead>
+<tr class="text-on-surface-variant font-label-sm text-xs">
+<th class="px-6 py-2 uppercase tracking-wider">Username</th>
+<th class="px-6 py-2 uppercase tracking-wider">Nama Lengkap</th>
+<th class="px-6 py-2 uppercase tracking-wider">Email</th>
+<th class="px-6 py-2 uppercase tracking-wider">Status Referensi</th>
+<th class="px-6 py-2 uppercase tracking-wider">Aksi</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-sm">
+{% for u in stats.get('users_list', []) %}
+<tr class="glass-card table-row-hover transition-colors rounded-xl overflow-hidden">
+<td class="px-6 py-4">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-sm">person</span>
+<span class="font-bold text-on-surface">{{ u.username }}</span>
+</div>
+</td>
+<td class="px-6 py-4">{{ u.full_name or '-' }}</td>
+<td class="px-6 py-4 text-on-surface-variant">{{ u.email }}</td>
+<td class="px-6 py-4">
+{% if u.is_registered %}
+<span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-secondary/10 text-secondary border border-secondary/30">{{ u.reference_signatures.count() }} Tanda Tangan</span>
+{% else %}
+<span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-tertiary-container/20 text-tertiary border border-tertiary-container/40">Belum Terdaftar</span>
+{% endif %}
+</td>
+<td class="px-6 py-4">
+<div class="flex space-x-2">
+{% if u.is_registered %}
+<a href="{{ url_for('web.verify', user_id=u.id) }}" class="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary/20 transition-all text-xs font-semibold">Verifikasi</a>
+{% endif %}
+<a href="{{ url_for('web.upload_signatures', user_id=u.id) }}" class="px-3 py-1 bg-surface-variant/50 text-on-surface-variant rounded-lg border border-outline-variant/30 hover:bg-surface-variant transition-all text-xs font-semibold">Upload Referensi</a>
+</div>
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="5" class="text-center py-8 text-on-surface-variant font-label-sm">Tidak ada data pengguna terdaftar.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- Scan History Section -->
+<section class="mb-xl">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-on-surface">Riwayat Verifikasi Terbaru</h3>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-separate border-spacing-y-3">
+<thead>
+<tr class="text-on-surface-variant font-label-sm text-xs">
+<th class="px-6 py-2 uppercase tracking-wider">ID</th>
+<th class="px-6 py-2 uppercase tracking-wider">Pengguna</th>
+<th class="px-6 py-2 uppercase tracking-wider text-center">Test Image</th>
+<th class="px-6 py-2 uppercase tracking-wider">Prediction</th>
+<th class="px-6 py-2 uppercase tracking-wider">Voting Score</th>
+<th class="px-6 py-2 uppercase tracking-wider">Waktu</th>
+<th class="px-6 py-2 uppercase tracking-wider">Aksi</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-sm">
+{% for verification in stats.get('recent_verifications', []) %}
+<tr class="glass-card table-row-hover transition-colors rounded-xl overflow-hidden">
+<td class="px-6 py-4 font-label-sm text-primary">#SV-{{ verification.id }}</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-bold">{{ verification.user.full_name or verification.user.username }}</span>
+<span class="text-xs text-on-surface-variant">@{{ verification.user.username }}</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="w-12 h-12 mx-auto rounded-lg overflow-hidden border border-outline-variant/30 bg-surface-container-lowest/50 flex items-center justify-center">
+<img class="max-h-full max-w-full object-contain grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all" src="{{ url_for('static', filename=verification.test_image_path | static_upload) }}"/>
+</div>
+</td>
+<td class="px-6 py-4">
+{% if verification.prediction == 'GENUINE' %}
+<span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-secondary/10 text-secondary border border-secondary/30">GENUINE</span>
+{% else %}
+<span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-tertiary-container/20 text-tertiary border border-tertiary-container/40">FORGED</span>
+{% endif %}
+</td>
+<td class="px-6 py-4 font-label-sm">
+<div class="flex items-center">
+<span class="text-on-surface">{{ verification.matched_signatures }}/{{ verification.total_signatures }}</span>
+<div class="ml-2 w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="{% if verification.prediction == 'GENUINE' %}bg-secondary{% else %}bg-tertiary-container{% endif %} h-full" style="width: {{ (verification.matched_signatures / (verification.total_signatures or 1)) * 100 }}%"></div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">{{ verification.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+<td class="px-6 py-4">
+<a href="{{ url_for('web.result', user_id=verification.user_id, history_id=verification.id) }}" class="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary/20 transition-all text-xs font-semibold">Lihat Detail</a>
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="7" class="text-center py-8 text-on-surface-variant font-label-sm">Belum ada riwayat verifikasi.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full py-12 flex flex-col md:flex-row justify-between items-center border-t border-outline-variant/20 mt-xl">
+<p class="font-label-sm text-on-surface-variant">© 2024 SigVerify.AI Forensics. Seluruh hak cipta dilindungi.</p>
+</footer>
+</main>
+<script>
+        // Micro-interaction for cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+        document.querySelectorAll(".material-symbols-outlined").forEach((span) => {
+          if (!span.innerText.trim()) {
+            const iconName = span.getAttribute("data-icon");
+            if (iconName) span.innerText = iconName;
+          }
+        });
+    </script>
+</body></html>

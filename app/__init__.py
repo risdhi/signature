@@ -29,6 +29,21 @@ def create_app(config_name='development'):
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     
+    @app.template_filter('basename')
+    def basename_filter(path):
+        import os
+        return os.path.basename(path) if path else ''
+
+    @app.template_filter('static_upload')
+    def static_upload_filter(path):
+        if not path:
+            return ''
+        parts = path.split('static/')
+        if len(parts) > 1:
+            return parts[-1]
+        import os
+        return os.path.basename(path)
+
     # Shell context for flask shell
     @app.shell_context_processor
     def make_shell_context():

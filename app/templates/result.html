@@ -1,359 +1,212 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Laporan Forensik #SV-{{ history.id }} | SigVerify.AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .glass-card { background: rgba(12,19,36,0.4); backdrop-filter: blur(12px); border: 1px solid rgba(70,69,84,0.3); border-top: 1px solid rgba(192,193,255,0.1); }
+  body { background-color: #0c1324; color: #dce1fb; overflow-x: hidden; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .fade-in { animation: fadeIn 0.5s ease both; }
+</style>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: { extend: { colors: {
+      "surface-container": "#191f31","on-surface-variant": "#c7c4d7","primary": "#c0c1ff","on-background": "#dce1fb",
+      "secondary": "#4edea3","tertiary-container": "#ff5168","surface": "#0c1324","primary-container": "#8083ff",
+      "on-primary-container": "#0d0096","on-primary": "#1000a9","outline-variant": "#464554","background": "#0c1324",
+      "surface-container-low": "#151b2d","surface-container-lowest": "#070d1f","surface-dim": "#0c1324",
+      "on-surface": "#dce1fb","surface-variant": "#2e3447","error": "#ffb4ab","outline": "#908fa0",
+    }}}
+  }
+</script>
+</head>
+<body class="bg-background text-on-surface min-h-screen p-6 md:p-12">
 
-{% block title %}Verification Result - Signature Verification{% endblock %}
-
-{% block content %}
-<section class="result-section">
-    <h2>Verification Result</h2>
-
-    <div class="result-container {% if history.prediction == 'GENUINE' %}result-genuine{% else %}result-forged{% endif %}">
-        <div class="result-header">
-            <div class="prediction-badge">
-                {% if history.prediction == 'GENUINE' %}
-                <span class="badge-icon">✓</span>
-                <span class="prediction-text">GENUINE</span>
-                {% else %}
-                <span class="badge-icon">✕</span>
-                <span class="prediction-text">FORGED</span>
-                {% endif %}
-            </div>
-            <div class="confidence-display">
-                <p class="confidence-label">Confidence Score</p>
-                <p class="confidence-value">{{ "%.1f"|format(history.confidence) }}%</p>
-                <div class="confidence-bar">
-                    <div class="confidence-fill" style="width: {{ history.confidence }}%"></div>
-                </div>
-            </div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md">
+      {% for category, message in messages %}
+        <div class="p-4 rounded-xl border backdrop-blur-xl flex items-center justify-between
+          {% if category == 'success' %}bg-emerald-950/80 text-emerald-300 border-emerald-500/30
+          {% elif category == 'error' %}bg-rose-950/80 text-rose-300 border-rose-500/30
+          {% else %}bg-blue-950/80 text-blue-300 border-blue-500/30{% endif %}">
+          <span class="text-sm">{{ message }}</span>
+          <button onclick="this.parentElement.remove()" class="ml-4 font-bold">✕</button>
         </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <h4>Average Similarity</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.average_similarity or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Max Similarity</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.max_similarity or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Min Similarity</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.min_similarity or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Euclidean Distance</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.euclidean_distance or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Matched Signatures</h4>
-                <p class="metric-value">{{ history.matched_signatures }}/{{ history.total_signatures }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Voting Score</h4>
-                <p class="metric-value">{{ "%.1f"|format(history.voting_score * 100) }}%</p>
-            </div>
+<!-- Ambient background -->
+<div class="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10"></div>
+<div class="fixed bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] -z-10"></div>
+
+<div class="max-w-5xl mx-auto fade-in">
+  <!-- Back navigation -->
+  <div class="mb-8 flex items-center justify-between">
+    <a href="{{ url_for('web.user_portal', user_id=history.user_id) }}" class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-sm text-sm">
+      <span class="material-symbols-outlined text-base">arrow_back</span>
+      Kembali ke Dashboard
+    </a>
+    <p class="font-label-sm text-[10px] text-outline uppercase tracking-widest">Laporan Forensik</p>
+  </div>
+
+  <!-- Header verdict -->
+  <div class="glass-card rounded-3xl p-10 mb-6 text-center relative overflow-hidden">
+    <!-- Glow bg -->
+    <div class="absolute inset-0 {% if history.prediction == 'GENUINE' %}bg-emerald-500/5{% else %}bg-rose-500/5{% endif %} pointer-events-none"></div>
+    <div class="relative">
+      <p class="font-label-sm text-[11px] text-outline uppercase tracking-[0.2em] mb-4">Hasil Inspeksi AI · #SV-{{ history.id }}</p>
+      <div class="inline-flex items-center gap-4 mb-6">
+        {% if history.prediction == 'GENUINE' %}
+        <div class="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-secondary/30 flex items-center justify-center">
+          <span class="material-symbols-outlined text-secondary text-4xl" style="font-variation-settings:'FILL' 1;">verified</span>
         </div>
-
-        <div class="details-section">
-            <h3>📊 Detailed Metrics</h3>
-            <table class="details-table">
-                <tr>
-                    <td>Prediction:</td>
-                    <td><strong>{{ history.prediction }}</strong></td>
-                </tr>
-                <tr>
-                    <td>Confidence:</td>
-                    <td>{{ "%.2f"|format(history.confidence) }}%</td>
-                </tr>
-                <tr>
-                    <td>Matched Signatures:</td>
-                    <td>{{ history.matched_signatures }} out of {{ history.total_signatures }}</td>
-                </tr>
-                <tr>
-                    <td>Voting Score:</td>
-                    <td>{{ "%.2f"|format(history.voting_score * 100) }}%</td>
-                </tr>
-                <tr>
-                    <td>Cosine Similarity:</td>
-                    <td>{{ "%.4f"|format(history.cosine_similarity or 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Average Distance:</td>
-                    <td>{{ "%.4f"|format(history.euclidean_distance or 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Processing Time:</td>
-                    <td>{{ "%.3f"|format(history.processing_time or 0) }} seconds</td>
-                </tr>
-                <tr>
-                    <td>Verification Date:</td>
-                    <td>{{ history.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                </tr>
-            </table>
+        <div class="text-left">
+          <h1 class="font-display-lg text-5xl font-bold text-secondary tracking-tight">GENUINE</h1>
+          <p class="font-body-md text-on-surface-variant mt-1">Tanda tangan terverifikasi asli</p>
         </div>
-
-        {% if history.similarity_scores %}
-        <div class="similarity-details">
-            <h3>📈 Similarity with Each Reference</h3>
-            <div class="similarity-list">
-                {% for similarity in history.similarity_scores %}
-                <div class="similarity-item">
-                    <span>Reference #{{ loop.index }}</span>
-                    <div class="similarity-bar-small">
-                        <div class="similarity-fill" style="width: {{ similarity * 100 }}%"></div>
-                    </div>
-                    <span class="similarity-score">{{ "%.4f"|format(similarity) }}</span>
-                </div>
-                {% endfor %}
-            </div>
+        {% else %}
+        <div class="w-16 h-16 rounded-2xl bg-rose-500/15 border border-error/30 flex items-center justify-center">
+          <span class="material-symbols-outlined text-error text-4xl" style="font-variation-settings:'FILL' 1;">gpp_bad</span>
+        </div>
+        <div class="text-left">
+          <h1 class="font-display-lg text-5xl font-bold text-error tracking-tight">FORGED</h1>
+          <p class="font-body-md text-on-surface-variant mt-1">Tanda tangan terindikasi palsu</p>
         </div>
         {% endif %}
+      </div>
+
+      <!-- Confidence bar -->
+      <div class="max-w-sm mx-auto">
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-label-sm text-[10px] text-outline uppercase tracking-wider">Tingkat Keyakinan</span>
+          <span class="font-label-sm text-sm font-bold {% if history.prediction == 'GENUINE' %}text-secondary{% else %}text-error{% endif %}">{{ "%.1f"|format(history.confidence) }}%</span>
+        </div>
+        <div class="w-full h-2 bg-surface-container rounded-full overflow-hidden border border-outline-variant/20">
+          <div class="h-full rounded-full transition-all duration-1000 {% if history.prediction == 'GENUINE' %}bg-gradient-to-r from-emerald-500 to-secondary{% else %}bg-gradient-to-r from-rose-600 to-error{% endif %}" style="width: {{ history.confidence }}%"></div>
+        </div>
+      </div>
+
+      <!-- Quick stats row -->
+      <div class="grid grid-cols-3 gap-4 mt-8 max-w-lg mx-auto">
+        <div class="glass-card rounded-xl p-4 text-center">
+          <p class="font-label-sm text-[9px] text-outline uppercase tracking-wider mb-1">Voting</p>
+          <p class="font-display-lg text-xl font-bold text-primary">{{ history.matched_signatures }}/{{ history.total_signatures }}</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-center">
+          <p class="font-label-sm text-[9px] text-outline uppercase tracking-wider mb-1">Cos Similarity</p>
+          <p class="font-display-lg text-xl font-bold text-primary">{{ "%.3f"|format(history.cosine_similarity or 0) }}</p>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-center">
+          <p class="font-label-sm text-[9px] text-outline uppercase tracking-wider mb-1">Processing</p>
+          <p class="font-display-lg text-xl font-bold text-primary">{{ "%.2f"|format(history.processing_time or 0) }}s</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics grid + Test image -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Detailed metrics -->
+    <div class="lg:col-span-2 glass-card rounded-2xl p-8">
+      <h3 class="font-headline-md text-on-surface mb-6 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-lg">analytics</span>
+        Metrik Forensik Lengkap
+      </h3>
+      <div class="space-y-3">
+        {% set rows = [
+          ('Prediksi', history.prediction),
+          ('Keyakinan', "%.2f"|format(history.confidence) + '%'),
+          ('Rata-Rata Similarity', "%.4f"|format(history.average_similarity or 0)),
+          ('Max Similarity', "%.4f"|format(history.max_similarity or 0)),
+          ('Min Similarity', "%.4f"|format(history.min_similarity or 0)),
+          ('Cosine Similarity', "%.4f"|format(history.cosine_similarity or 0)),
+          ('Euclidean Distance', "%.4f"|format(history.euclidean_distance or 0)),
+          ('Voting Score', "%.1f"|format(history.voting_score * 100) + '%'),
+          ('Cocok / Total', history.matched_signatures|string + ' / ' + history.total_signatures|string),
+          ('Waktu Proses', "%.3f"|format(history.processing_time or 0) + ' detik'),
+          ('Tanggal Verifikasi', history.verification_date.strftime('%d %B %Y %H:%M:%S')),
+        ] %}
+        {% for label, val in rows %}
+        <div class="flex items-center justify-between py-3 border-b border-outline-variant/10 last:border-0">
+          <span class="font-label-sm text-[11px] text-outline uppercase tracking-wider">{{ label }}</span>
+          <span class="font-label-sm text-sm text-on-surface font-semibold {% if label == 'Prediksi' %}{% if history.prediction == 'GENUINE' %}text-secondary{% else %}text-error{% endif %}{% endif %}">{{ val }}</span>
+        </div>
+        {% endfor %}
+      </div>
     </div>
 
-    <div class="action-buttons">
-        <a href="{{ url_for('web.verify', user_id=history.user_id) }}" class="btn btn-primary">Verify Another</a>
-        <a href="{{ url_for('web.history', user_id=history.user_id) }}" class="btn btn-secondary">View History</a>
-        <a href="{{ url_for('web.index') }}" class="btn btn-outline">Dashboard</a>
+    <!-- Test image + date -->
+    <div class="flex flex-col gap-6">
+      <div class="glass-card rounded-2xl p-6 flex-1 flex flex-col">
+        <h4 class="font-label-sm text-[10px] text-outline uppercase tracking-wider mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">image</span>
+          Gambar Uji
+        </h4>
+        <div class="flex-1 rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container flex items-center justify-center min-h-[160px]">
+          <img
+            src="{{ url_for('static', filename=history.test_image_path | static_upload) }}"
+            alt="Test Signature"
+            class="max-w-full max-h-48 object-contain"
+            onerror="this.parentElement.innerHTML='<span class=\'text-outline font-label-sm text-xs\'>Tidak tersedia</span>'"
+          >
+        </div>
+        <p class="text-[9px] font-label-sm text-outline mt-2 text-center">{{ history.test_image_path | basename }}</p>
+      </div>
+
+      <div class="glass-card rounded-2xl p-6">
+        <h4 class="font-label-sm text-[10px] text-outline uppercase tracking-wider mb-3">Pengguna</h4>
+        <p class="font-body-md text-sm font-bold text-on-surface">{{ history.user.full_name or history.user.username }}</p>
+        <p class="font-label-sm text-[10px] text-outline">@{{ history.user.username }}</p>
+      </div>
     </div>
-</section>
+  </div>
 
-<style>
-.result-section {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-}
+  <!-- Per-reference similarity breakdown -->
+  {% if history.similarity_scores %}
+  <div class="glass-card rounded-2xl p-8 mb-6">
+    <h3 class="font-headline-md text-on-surface mb-6 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-lg">bar_chart</span>
+      Skor Kesamaan per Referensi
+    </h3>
+    <div class="space-y-4">
+      {% for score in history.similarity_scores %}
+      <div class="flex items-center gap-4">
+        <span class="font-label-sm text-[10px] text-outline uppercase w-28 shrink-0">Referensi #{{ loop.index }}</span>
+        <div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden border border-outline-variant/10">
+          <div class="h-full rounded-full {% if score >= 0.6 %}bg-gradient-to-r from-emerald-500 to-secondary{% else %}bg-gradient-to-r from-rose-600 to-error{% endif %}" style="width: {{ [score * 100, 100]|min }}%"></div>
+        </div>
+        <span class="font-label-sm text-sm font-bold {% if score >= 0.6 %}text-secondary{% else %}text-error{% endif %} w-16 text-right shrink-0">{{ "%.4f"|format(score) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
-.result-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-    overflow: hidden;
-    border-left: 5px solid;
-}
+  <!-- Action buttons -->
+  <div class="flex flex-wrap gap-4 justify-center">
+    <a href="{{ url_for('web.verify', user_id=history.user_id) }}"
+       class="flex items-center gap-2 bg-primary text-on-primary-container font-bold px-6 py-3 rounded-xl hover:shadow-[0_0_20px_rgba(192,193,255,0.3)] transition-all">
+      <span class="material-symbols-outlined text-base">refresh</span>
+      Verifikasi Lagi
+    </a>
+    <a href="{{ url_for('web.user_portal', user_id=history.user_id) }}"
+       class="flex items-center gap-2 bg-surface-container border border-outline-variant/30 text-on-surface font-bold px-6 py-3 rounded-xl hover:bg-surface-variant/30 transition-all">
+      <span class="material-symbols-outlined text-base">dashboard</span>
+      Kembali ke Dashboard
+    </a>
+  </div>
 
-.result-genuine {
-    border-left-color: #28a745;
-}
+  <p class="text-center font-label-sm text-[9px] text-outline mt-10 tracking-widest uppercase">SigVerify.AI · Laporan dihasilkan otomatis oleh sistem AI · {{ history.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+</div>
 
-.result-forged {
-    border-left-color: #dc3545;
-}
-
-.result-header {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    padding: 2rem;
-    text-align: center;
-}
-
-.prediction-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.badge-icon {
-    font-size: 3rem;
-    font-weight: bold;
-}
-
-.result-genuine .badge-icon {
-    color: #28a745;
-}
-
-.result-forged .badge-icon {
-    color: #dc3545;
-}
-
-.prediction-text {
-    font-size: 1.8rem;
-    font-weight: bold;
-}
-
-.result-genuine .prediction-text {
-    color: #28a745;
-}
-
-.result-forged .prediction-text {
-    color: #dc3545;
-}
-
-.confidence-display {
-    margin: 1rem 0;
-}
-
-.confidence-label {
-    margin: 0 0 0.5rem 0;
-    color: #666;
-    font-size: 0.95rem;
-}
-
-.confidence-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #0066cc;
-    margin: 0;
-}
-
-.confidence-bar {
-    width: 100%;
-    height: 20px;
-    background: #e0e0e0;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-}
-
-.confidence-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #0066cc, #00cc66);
-    transition: width 0.3s ease;
-}
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    padding: 2rem;
-}
-
-.metric-card {
-    background: #f9f9f9;
-    padding: 1rem;
-    border-radius: 6px;
-    text-align: center;
-    border: 1px solid #eee;
-}
-
-.metric-card h4 {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.85rem;
-    color: #666;
-    text-transform: uppercase;
-}
-
-.metric-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #0066cc;
-    margin: 0;
-}
-
-.details-section, .similarity-details {
-    padding: 2rem;
-    border-top: 1px solid #eee;
-}
-
-.details-section h3, .similarity-details h3 {
-    margin-top: 0;
-    color: #333;
-}
-
-.details-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.details-table tr {
-    border-bottom: 1px solid #eee;
-}
-
-.details-table td {
-    padding: 0.75rem;
-}
-
-.details-table td:first-child {
-    color: #666;
-    font-weight: 600;
-    width: 40%;
-}
-
-.similarity-list {
-    display: grid;
-    gap: 1rem;
-}
-
-.similarity-item {
-    display: grid;
-    grid-template-columns: 80px 1fr 60px;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    background: #f9f9f9;
-    border-radius: 4px;
-}
-
-.similarity-bar-small {
-    width: 100%;
-    height: 16px;
-    background: #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.similarity-fill {
-    height: 100%;
-    background: #0066cc;
-    transition: width 0.3s ease;
-}
-
-.similarity-score {
-    font-weight: 600;
-    color: #0066cc;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin: 2rem 0;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s;
-    display: inline-block;
-}
-
-.btn-primary {
-    background: #0066cc;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #0052a3;
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-}
-
-.btn-outline {
-    background: white;
-    color: #0066cc;
-    border: 2px solid #0066cc;
-}
-
-.btn-outline:hover {
-    background: #0066cc;
-    color: white;
-}
-</style>
-
-<script>
-// Add enumerate filter for Jinja2
-</script>
-{% endblock %}
+</body>
+</html>

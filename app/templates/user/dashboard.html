@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SigVerify.AI | User Forensic Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(12, 19, 36, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(70, 69, 84, 0.3);
+            border-top: 1px solid rgba(192, 193, 255, 0.1);
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 20px rgba(192, 193, 255, 0.15);
+            border-color: rgba(192, 193, 255, 0.4);
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s infinite ease-in-out;
+        }
+        body {
+            background-color: #0c1324;
+            color: #dce1fb;
+            overflow-x: hidden;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#191f31",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#c7c4d7",
+                        "primary": "#c0c1ff",
+                        "on-background": "#dce1fb",
+                        "on-primary-fixed": "#07006c",
+                        "secondary-fixed": "#6ffbbe",
+                        "outline": "#908fa0",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "surface-container-highest": "#2e3447",
+                        "on-surface": "#dce1fb",
+                        "surface-variant": "#2e3447",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-secondary-fixed": "#002113",
+                        "surface": "#0c1324",
+                        "inverse-primary": "#494bd6",
+                        "primary-fixed": "#e1e0ff",
+                        "inverse-surface": "#dce1fb",
+                        "secondary-container": "#00a572",
+                        "tertiary-container": "#ff5168",
+                        "surface-bright": "#33394c",
+                        "error-container": "#93000a",
+                        "secondary": "#4edea3",
+                        "on-tertiary-fixed-variant": "#920028",
+                        "error": "#ffb4ab",
+                        "on-error": "#690005",
+                        "on-primary-container": "#0d0096",
+                        "primary-container": "#8083ff",
+                        "on-primary": "#1000a9",
+                        "on-tertiary-container": "#5b0015",
+                        "surface-tint": "#c0c1ff",
+                        "surface-container-high": "#23293c",
+                        "tertiary-fixed-dim": "#ffb3b6",
+                        "tertiary-fixed": "#ffdada",
+                        "background": "#0c1324",
+                        "on-secondary": "#003824",
+                        "outline-variant": "#464554",
+                        "on-tertiary": "#68001a",
+                        "on-tertiary-fixed": "#40000c",
+                        "surface-container-low": "#151b2d",
+                        "surface-container-lowest": "#070d1f",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-secondary-container": "#00311f",
+                        "inverse-on-surface": "#2a3043",
+                        "surface-dim": "#0c1324"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "8px",
+                        "lg": "40px",
+                        "md": "24px",
+                        "xl": "64px",
+                        "sm": "16px",
+                        "base": "4px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["JetBrains Mono"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "status-caps": ["Geist"],
+                        "body-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary/30">
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md w-full">
+      {% for category, message in messages %}
+        <div class="p-4 rounded-xl shadow-2xl backdrop-blur-xl border flex items-center justify-between
+          {% if category == 'success' %}bg-emerald-950/80 text-emerald-300 border-emerald-500/30
+          {% elif category == 'error' %}bg-rose-950/80 text-rose-300 border-rose-500/30
+          {% elif category == 'warning' %}bg-amber-950/80 text-amber-300 border-amber-500/30
+          {% else %}bg-blue-950/80 text-blue-300 border-blue-500/30{% endif %}" role="alert">
+          <span class="font-body-md text-sm">{{ message }}</span>
+          <button onclick="this.parentElement.remove()" class="ml-4 font-bold">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+<!-- Sidebar Navigation -->
+<aside class="fixed top-0 left-0 flex flex-col h-full w-64 bg-surface-container-low/60 backdrop-blur-xl border-r border-outline-variant/20 z-40 transition-all duration-200 ease-in-out md:translate-x-0 -translate-x-full" id="sidebar">
+<div class="p-6">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">SigVerify.AI</h1>
+<p class="font-label-sm text-label-sm text-outline mt-1 uppercase tracking-widest">Forensic Hub</p>
+</div>
+<nav class="flex-1 px-4 space-y-2 mt-8">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border-r-4 border-primary font-body-md text-body-md transition-all duration-200" href="{{ url_for('web.user_portal', user_id=user.id) }}">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+</nav>
+<div class="mt-auto p-4 space-y-4 border-t border-outline-variant/10">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-full border border-primary/20 bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div>
+<p class="font-body-md text-body-md font-semibold text-on-surface">{{ user.full_name or user.username }}</p>
+<p class="text-[10px] font-label-sm text-outline uppercase tracking-wider">{{ sig_count }} Referensi</p>
+</div>
+</div>
+<div class="flex flex-col gap-1 pb-4">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:text-error font-label-sm text-label-sm transition-colors" href="{{ url_for('web.logout') }}">
+<span class="material-symbols-outlined">logout</span>
+                    Keluar
+                </a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="md:ml-64 p-gutter md:p-margin-desktop min-h-screen">
+<header class="mb-12 flex justify-between items-end">
+<div>
+<h2 class="font-display-lg text-display-lg text-primary tracking-tight">Forensic Dashboard</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 max-w-2xl">Selamat datang kembali, <strong class="text-on-surface">{{ user.full_name or user.username }}</strong>. Sistem bertenaga AI siap mengekstrak koordinat biometrik untuk validasi tingkat lanjut.</p>
+</div>
+<div class="hidden lg:flex items-center gap-4 bg-surface-container-high/40 p-2 rounded-2xl border border-outline-variant/20 px-6 py-3">
+<div class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_10px_#4edea3] animate-pulse"></div>
+<span class="font-label-sm text-label-sm text-secondary text-xs">SISTEM AKTIF</span>
+</div>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Section 1: Signature Enrollment -->
+<section class="lg:col-span-7 flex flex-col gap-6">
+<div class="glass-card rounded-2xl p-8 glow-hover transition-all duration-300">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Pendaftaran Tanda Tangan</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Unggah {{ sig_count }}/{{ 5 }} referensi asli untuk membangun profil biometrik dasar.</p>
+</div>
+<span class="material-symbols-outlined text-primary text-4xl">verified_user</span>
+</div>
+<!-- Upload Form -->
+<form action="{{ url_for('web.upload_signatures', user_id=user.id) }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+<label for="refFiles" class="border-2 border-dashed border-outline-variant/40 rounded-2xl p-12 flex flex-col items-center justify-center text-center group cursor-pointer hover:border-primary/50 transition-colors bg-surface-container-lowest/30 block">
+<div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-3xl">cloud_upload</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface mb-1">Klik atau Tarik &amp; Lepas File di Sini</p>
+<p class="font-label-sm text-label-sm text-outline">Mendukung PNG, JPG (Min. 2, Maks. 5 file)</p>
+<input type="file" id="refFiles" name="files" accept="image/*" multiple class="hidden" onchange="previewRefFiles(this)">
+</label>
+<!-- Preview grid for to-be-uploaded files -->
+<div class="grid grid-cols-4 gap-4 mt-4 hidden" id="newFilePreview"></div>
+<button type="submit" id="uploadBtn" class="hidden mt-4 w-full bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 font-headline-md py-3 rounded-xl transition-all">Simpan Referensi Baru</button>
+</form>
+<!-- Existing reference signatures -->
+{% if reference_signatures %}
+<div class="mt-6">
+<p class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-3">Referensi Tersimpan ({{ sig_count }})</p>
+<div class="grid grid-cols-4 gap-4">
+{% for sig in reference_signatures %}
+<div class="aspect-square rounded-xl border border-outline-variant/30 overflow-hidden relative group bg-surface-container">
+<img class="w-full h-full object-contain opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+     src="{{ url_for('static', filename=sig.image_path | static_upload) }}"
+     alt="Referensi {{ loop.index }}"
+     onerror="this.src='{{ url_for('static', filename='img/placeholder.png') }}'">
+<div class="absolute bottom-1 right-1">
+<span class="material-symbols-outlined text-secondary text-xs" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="absolute top-1 left-1 bg-surface/60 rounded px-1">
+<span class="font-label-sm text-[9px] text-outline">#{{ loop.index }}</span>
+</div>
+</div>
+{% endfor %}
+{% if sig_count < 5 %}
+<div class="aspect-square rounded-xl border border-dashed border-outline-variant/40 flex flex-col items-center justify-center hover:bg-surface-variant/20 transition-colors group cursor-pointer" onclick="document.getElementById('refFiles').click()">
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">add</span>
+<span class="text-[9px] font-label-sm text-outline mt-1">Tambah</span>
+</div>
+{% endif %}
+</div>
+</div>
+{% endif %}
+</div>
+<!-- Section 3: Personal History (Desktop Only) -->
+<div class="glass-card rounded-2xl p-8 hidden md:block">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline-md text-headline-md text-on-surface">Riwayat Audit Personal</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="border-b border-outline-variant/10">
+<th class="py-4 font-label-sm text-label-sm text-outline uppercase tracking-wider">ID Berkas</th>
+<th class="py-4 font-label-sm text-label-sm text-outline uppercase tracking-wider">Tanggal</th>
+<th class="py-4 font-label-sm text-label-sm text-outline uppercase tracking-wider">Kepercayaan</th>
+<th class="py-4 font-label-sm text-label-sm text-outline uppercase tracking-wider">Hasil</th>
+<th class="py-4 font-label-sm text-label-sm text-outline uppercase tracking-wider">Aksi</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+{% for h in history_list %}
+<tr class="group hover:bg-surface-variant/10 transition-colors">
+<td class="py-4 font-label-sm text-label-sm text-on-surface">#SV-{{ h.id }}</td>
+<td class="py-4 font-body-md text-body-md text-on-surface-variant">{{ h.verification_date.strftime('%d %b %Y %H:%M') }}</td>
+<td class="py-4">
+<div class="flex items-center gap-2">
+<div class="w-24 bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-gradient-to-r from-indigo-500 to-violet-600 h-full" style="width: {{ h.confidence | round(1) }}%"></div>
+</div>
+<span class="font-label-sm text-[10px] text-outline">{{ h.confidence | round(1) }}%</span>
+</div>
+</td>
+<td class="py-4">
+{% if h.prediction == 'GENUINE' %}
+<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 text-secondary border border-secondary/30">Asli</span>
+{% else %}
+<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-rose-600/10 text-error border border-error/30">Palsu</span>
+{% endif %}
+</td>
+<td class="py-4">
+<a href="{{ url_for('web.result', user_id=user.id, history_id=h.id) }}" class="text-primary hover:underline font-label-sm text-xs">Detail</a>
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="5" class="py-8 text-center text-on-surface-variant font-label-sm">Belum ada riwayat verifikasi.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Section 2: Verification Check -->
+<aside class="lg:col-span-5 flex flex-col gap-6">
+<div class="glass-card rounded-2xl p-8 border-primary/20 bg-primary/5">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">search_check</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Inspektor Verifikasi</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Unggah 1 tanda tangan uji untuk dibandingkan dengan profil referensi terdaftar Anda.</p>
+{% if not user.is_registered %}
+<div class="p-4 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-body-md text-sm mb-4">
+  ⚠️ Anda belum mendaftarkan tanda tangan referensi. Upload minimal 2 referensi terlebih dahulu.
+</div>
+{% endif %}
+<!-- Verify Form -->
+<form action="{{ url_for('web.verify', user_id=user.id) }}" method="POST" enctype="multipart/form-data" id="verifyForm">
+<label for="testFile" class="relative group cursor-pointer mb-6 block">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary opacity-20 group-hover:opacity-40 blur transition duration-1000 group-hover:duration-200"></div>
+<div class="relative bg-surface-container rounded-2xl p-10 border border-outline-variant/30 flex flex-col items-center justify-center text-center" id="dropTarget">
+<span class="material-symbols-outlined text-5xl text-outline-variant mb-4 group-hover:text-primary transition-colors" id="dropIcon">content_copy</span>
+<p class="font-body-md text-body-md text-on-surface font-semibold" id="dropLabel">Tanda Tangan Uji</p>
+<p class="font-label-sm text-label-sm text-outline mt-1">Hanya 1 file (PNG/JPG)</p>
+<img id="testPreview" class="hidden mt-4 max-h-32 rounded-xl border border-outline-variant/30 mx-auto" src="" alt="Preview">
+</div>
+<input type="file" id="testFile" name="file" accept="image/*" class="hidden" onchange="previewTestFile(this)" {% if not user.is_registered %}disabled{% endif %}>
+</label>
+<div class="space-y-4">
+<button type="submit" id="verifyBtn" class="w-full bg-primary text-on-primary-container font-headline-md text-headline-md py-4 rounded-xl flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(192,193,255,0.3)] transition-all duration-500 group overflow-hidden relative {% if not user.is_registered %}opacity-50 cursor-not-allowed{% endif %}" onclick="return submitVerify(event)" {% if not user.is_registered %}disabled{% endif %}>
+<span class="relative z-10 flex items-center gap-2">
+<span class="material-symbols-outlined">bolt</span>
+  Jalankan AI Inspektor
+</span>
+<div class="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+</button>
+<p class="text-center font-label-sm text-label-sm text-outline italic">Proses ini akan memakan waktu kurang dari 3 detik.</p>
+</div>
+</form>
+</div>
+<!-- Forensic Insights Box -->
+<div class="glass-card rounded-2xl p-6">
+<h4 class="font-label-sm text-label-sm text-outline mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="info">info</span>
+                        WAWASAN FORENSIK
+                    </h4>
+<div class="space-y-4">
+<div class="flex items-start gap-4 p-3 rounded-lg bg-surface-container/50">
+<span class="material-symbols-outlined text-secondary" data-icon="architecture">architecture</span>
+<div>
+<p class="font-body-md text-body-md font-medium text-on-surface">Analisis Tekanan Saraf</p>
+<p class="font-label-sm text-label-sm text-outline">AI mendeteksi fluktuasi mikroskopis dalam distribusi tinta.</p>
+</div>
+</div>
+<div class="flex items-start gap-4 p-3 rounded-lg bg-surface-container/50">
+<span class="material-symbols-outlined text-primary" data-icon="timeline">timeline</span>
+<div>
+<p class="font-body-md text-body-md font-medium text-on-surface">Peta Panas Geometris</p>
+<p class="font-label-sm text-label-sm text-outline">Perbandingan sudut dan kelengkungan berbasis piksel.</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Full-Screen Loading Modal -->
+<div class="fixed inset-0 z-[100] bg-surface/90 backdrop-blur-2xl flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500" id="loadingModal">
+<div class="relative w-48 h-48 mb-8 flex items-center justify-center">
+<!-- Pulsing Circles -->
+<div class="absolute inset-0 border-4 border-primary rounded-full animate-pulse-slow opacity-20"></div>
+<div class="absolute inset-4 border-2 border-secondary rounded-full animate-pulse-slow delay-75 opacity-20"></div>
+<div class="absolute inset-8 border border-primary rounded-full animate-pulse-slow delay-150 opacity-20"></div>
+<!-- Scanning Line -->
+<div class="w-40 h-1 bg-gradient-to-r from-transparent via-primary to-transparent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_20px_#c0c1ff] animate-bounce"></div>
+<span class="material-symbols-outlined text-6xl text-primary" data-icon="neurology" style="font-variation-settings: 'FILL' 1;">neurology</span>
+</div>
+<div class="text-center space-y-2">
+<h3 class="font-headline-lg text-headline-lg text-primary tracking-tight">Menjalankan Neural Engine</h3>
+<p class="font-label-sm text-label-sm text-outline tracking-[0.2em] animate-pulse">AI SEDANG MENGEKSTRAK EMBEDDING FITUR...</p>
+</div>
+<div class="mt-12 w-64 h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-0 transition-all duration-100 ease-linear" id="progress-bar"></div>
+</div>
+</div>
+<!-- Mobile Navigation (Footer Style) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-high/80 backdrop-blur-lg flex justify-around items-center p-4 border-t border-outline-variant/10 z-50">
+<a class="text-primary flex flex-col items-center" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-[10px] font-label-sm">Home</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="text-[10px] font-label-sm">History</span>
+</a>
+<button class="bg-primary text-on-primary-container w-12 h-12 rounded-full flex items-center justify-center -translate-y-6 shadow-lg">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<a class="text-on-surface-variant flex flex-col items-center" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="text-[10px] font-label-sm">AI Scan</span>
+</a>
+<a class="text-on-surface-variant flex flex-col items-center" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] font-label-sm">Profil</span>
+</a>
+</nav>
+<script>
+    function previewRefFiles(input) {
+        const preview = document.getElementById('newFilePreview');
+        const btn = document.getElementById('uploadBtn');
+        preview.innerHTML = '';
+        preview.classList.remove('hidden');
+        btn.classList.remove('hidden');
+        Array.from(input.files).forEach((file, i) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                div.className = 'aspect-square rounded-xl border border-primary/30 overflow-hidden bg-surface-container';
+                div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-contain opacity-80">`;
+                preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function previewTestFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('testPreview');
+            const icon = document.getElementById('dropIcon');
+            const label = document.getElementById('dropLabel');
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            icon.classList.add('hidden');
+            label.textContent = file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function submitVerify(e) {
+        const fileInput = document.getElementById('testFile');
+        if (!fileInput.files || fileInput.files.length === 0) {
+            e.preventDefault();
+            alert('Pilih file tanda tangan uji terlebih dahulu.');
+            return false;
+        }
+        const modal = document.getElementById('loadingModal');
+        const progress = document.getElementById('progress-bar');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        let width = 0;
+        const interval = setInterval(() => {
+            if (width >= 90) { clearInterval(interval); }
+            else { width += 2; progress.style.width = width + '%'; }
+        }, 60);
+        return true;
+    }
+
+    // Dropzone drag-and-drop for test file
+    const dropTarget = document.getElementById('dropTarget');
+    if (dropTarget) {
+        dropTarget.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropTarget.classList.add('border-primary', 'bg-primary/5');
+        });
+        dropTarget.addEventListener('dragleave', () => {
+            dropTarget.classList.remove('border-primary', 'bg-primary/5');
+        });
+        dropTarget.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropTarget.classList.remove('border-primary', 'bg-primary/5');
+            const fileInput = document.getElementById('testFile');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                previewTestFile(fileInput);
+            }
+        });
+    }
+    </script>
+</body></html>

@@ -1,221 +1,125 @@
-{% extends "base.html" %}
-
-{% block title %}Dashboard - Signature Verification{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Dashboard - Signature Verification{%
+endblock %} {% block content %}
 <section class="dashboard">
-    <h2>Dashboard</h2>
-    
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Total Users</h3>
-            <p class="stat-number">{{ stats.get('total_users', 0) }}</p>
-        </div>
-        <div class="stat-card">
-            <h3>Registered Users</h3>
-            <p class="stat-number">{{ stats.get('registered_users', 0) }}</p>
-        </div>
-        <div class="stat-card">
-            <h3>Total Verifications</h3>
-            <p class="stat-number">{{ stats.get('total_verifications', 0) }}</p>
-        </div>
-        <div class="stat-card">
-            <h3>Genuine Predictions</h3>
-            <p class="stat-number success">{{ stats.get('genuine_count', 0) }}</p>
-        </div>
-        <div class="stat-card">
-            <h3>Forged Predictions</h3>
-            <p class="stat-number error">{{ stats.get('forged_count', 0) }}</p>
-        </div>
-    </div>
+  <h2>Dashboard</h2>
 
-    <div class="recent-section">
-        <h3>Registered Users</h3>
-        {% if stats.users_list %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>References</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in stats.users_list %}
-                <tr>
-                    <td><strong>{{ u.username }}</strong></td>
-                    <td>{{ u.full_name or '-' }}</td>
-                    <td>{{ u.email }}</td>
-                    <td>
-                        {% if u.is_registered %}
-                            <span class="badge badge-success">{{ u.reference_signatures.count() }} Signatures</span>
-                        {% else %}
-                            <span class="badge badge-error">Not Registered</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if u.is_registered %}
-                            <a href="{{ url_for('web.verify', user_id=u.id) }}" class="btn btn-secondary btn-sm" style="color: black; font-weight: bold; padding: 0.25rem 0.5rem; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; background: #e9ecef;">Verify Signature</a>
-                        {% else %}
-                            <a href="{{ url_for('web.upload_signatures', user_id=u.id) }}" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px;">Upload Signatures</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p class="text-muted">No registered users found</p>
-        {% endif %}
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>Total Users</h3>
+      <p class="stat-number">{{ stats.get('total_users', 0) }}</p>
     </div>
+    <div class="stat-card">
+      <h3>Registered Users</h3>
+      <p class="stat-number">{{ stats.get('registered_users', 0) }}</p>
+    </div>
+    <div class="stat-card">
+      <h3>Total Verifications</h3>
+      <p class="stat-number">{{ stats.get('total_verifications', 0) }}</p>
+    </div>
+    <div class="stat-card">
+      <h3>Genuine Predictions</h3>
+      <p class="stat-number success">{{ stats.get('genuine_count', 0) }}</p>
+    </div>
+    <div class="stat-card">
+      <h3>Forged Predictions</h3>
+      <p class="stat-number error">{{ stats.get('forged_count', 0) }}</p>
+    </div>
+  </div>
 
-    <div class="recent-section">
-        <h3>Recent Verifications</h3>
-        {% if stats.recent_verifications %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>User ID</th>
-                    <th>Prediction</th>
-                    <th>Confidence</th>
-                    <th>Similarity</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for verification in stats.recent_verifications %}
-                <tr>
-                    <td>{{ verification.verification_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>{{ verification.user_id }}</td>
-                    <td>
-                        <span class="badge {% if verification.prediction == 'GENUINE' %}badge-success{% else %}badge-error{% endif %}">
-                            {{ verification.prediction }}
-                        </span>
-                    </td>
-                    <td>{{ "%.1f"|format(verification.confidence) }}%</td>
-                    <td>{{ "%.3f"|format(verification.average_similarity or 0) }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p class="text-muted">No verifications yet</p>
-        {% endif %}
-    </div>
+  <div class="recent-section">
+    <h3>Registered Users</h3>
+    {% if stats.users_list %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>References</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in stats.users_list %}
+        <tr>
+          <td><strong>{{ u.username }}</strong></td>
+          <td>{{ u.full_name or '-' }}</td>
+          <td>{{ u.email }}</td>
+          <td>
+            {% if u.is_registered %}
+            <span class="badge badge-success"
+              >{{ u.reference_signatures.count() }} Signatures</span
+            >
+            {% else %}
+            <span class="badge badge-error">Not Registered</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_registered %}
+            <a
+              href="{{ url_for('web.verify', user_id=u.id) }}"
+              class="btn btn-secondary btn-small"
+              >Verify Signature</a
+            >
+            {% else %}
+            <a
+              href="{{ url_for('web.upload_signatures', user_id=u.id) }}"
+              class="btn btn-primary btn-small"
+              >Upload Signatures</a
+            >
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No registered users found</p>
+    {% endif %}
+  </div>
 
-    <div class="action-buttons">
-        <a href="{{ url_for('web.register') }}" class="btn btn-primary">+ Register New User</a>
-    </div>
+  <div class="recent-section">
+    <h3>Recent Verifications</h3>
+    {% if stats.recent_verifications %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>User ID</th>
+          <th>Prediction</th>
+          <th>Confidence</th>
+          <th>Similarity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for verification in stats.recent_verifications %}
+        <tr>
+          <td>
+            {{ verification.verification_date.strftime('%Y-%m-%d %H:%M') }}
+          </td>
+          <td>{{ verification.user_id }}</td>
+          <td>
+            <span
+              class="badge {% if verification.prediction == 'GENUINE' %}badge-success{% else %}badge-error{% endif %}"
+            >
+              {{ verification.prediction }}
+            </span>
+          </td>
+          <td>{{ "%.1f"|format(verification.confidence) }}%</td>
+          <td>{{ "%.3f"|format(verification.average_similarity or 0) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No verifications yet</p>
+    {% endif %}
+  </div>
+
+  <div class="action-buttons">
+    <a href="{{ url_for('web.register') }}" class="btn btn-primary"
+      >+ Register New User</a
+    >
+  </div>
 </section>
-
-<style>
-.dashboard {
-    padding: 2rem;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin: 2rem 0;
-}
-
-.stat-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #0066cc;
-    margin: 0.5rem 0;
-}
-
-.stat-number.success {
-    color: #28a745;
-}
-
-.stat-number.error {
-    color: #dc3545;
-}
-
-.recent-section {
-    margin: 2rem 0;
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-
-.table thead {
-    background: #f5f5f5;
-}
-
-.table th, .table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.badge-success {
-    background: #d4edda;
-    color: #155724;
-}
-
-.badge-error {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.action-buttons {
-    margin: 2rem 0;
-    text-align: center;
-}
-
-.btn {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s;
-}
-
-.btn-primary {
-    background: #0066cc;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #0052a3;
-    transform: translateY(-2px);
-}
-
-.text-muted {
-    color: #999;
-    font-style: italic;
-}
-</style>
 {% endblock %}

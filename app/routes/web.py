@@ -16,79 +16,67 @@ web_bp = Blueprint('web', __name__)
 
 @web_bp.before_request
 def require_login():
-    # Allow static assets and authentication endpoints
-    allowed_endpoints = ['web.login', 'web.register', 'static']
+    # Allow landing page and authentication endpoints
+    allowed_endpoints = ['web.login', 'web.register', 'web.index', 'static']
     if request.endpoint in allowed_endpoints:
         return
-        
+
     if not session.get('user_id'):
         flash('Silakan login terlebih dahulu.', 'warning')
         return redirect(url_for('web.login'))
-        
-    # Check roles and permissions
+
     logged_in_user_id = session.get('user_id')
     logged_in_username = session.get('username')
-    
-    # Check if request has user_id parameter
     requested_user_id = request.view_args.get('user_id') if request.view_args else None
-    
+
     if logged_in_username == 'admins':
-        # Admin is accessing a page
-        # If it's a page with user_id, make sure the user isn't 'admins' itself
-        if requested_user_id:
-            user = db.session.query(User).filter_by(id=requested_user_id).first()
-            if user and user.username == 'admins':
-                flash('Admin tidak dapat melakukan operasi ini pada akun admin.', 'error')
-                return redirect(url_for('web.index'))
-                
-            # "hanya bisa verify" - admin cannot upload signatures or go to user portal
-            if request.endpoint in ['web.user_portal', 'web.upload_signatures']:
-                flash('Sebagai admin, Anda hanya dapat memverifikasi tanda tangan.', 'info')
-                return redirect(url_for('web.verify', user_id=requested_user_id))
+        if request.endpoint == 'web.user_portal':
+            flash('Admin tidak dapat masuk ke portal pengguna.', 'info')
+            return redirect(url_for('web.admin_dashboard'))
     else:
-        # Regular user is accessing a page
-        # They can only access their own user pages
+        if request.endpoint == 'web.admin_dashboard':
+            flash('Anda tidak memiliki akses ke halaman admin.', 'error')
+            return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
+
         if requested_user_id and requested_user_id != logged_in_user_id:
             flash('Anda tidak memiliki akses ke halaman tersebut.', 'error')
-            return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
-            
-        # They cannot access the admin dashboard
-        if request.endpoint == 'web.index':
             return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
 
 
 @web_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """User and Admin Login"""
+    selected_role = request.form.get('role') or request.args.get('role')
+
     if session.get('user_id'):
         if session.get('username') == 'admins':
-            return redirect(url_for('web.index'))
-        else:
-            return redirect(url_for('web.user_portal', user_id=session.get('user_id')))
-            
+            return redirect(url_for('web.admin_dashboard'))
+        return redirect(url_for('web.user_portal', user_id=session.get('user_id')))
+
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        
+        selected_role = request.form.get('role') or request.args.get('role')
+
         if not username or not password:
             flash('Username dan password harus diisi', 'error')
-            return render_template('login.html')
-            
-        # Fetch user
-        user = db.session.query(User).filter_by(username=username).first()
+            return render_template('login.html', selected_role=selected_role)
+
+        user = db.session.query(User).filter(
+            (User.username == username) | (User.email == username)
+        ).first()
         if user and user.check_password(password):
             session['user_id'] = user.id
             session['username'] = user.username
             flash(f'Selamat datang kembali, {user.full_name or user.username}!', 'success')
-            
+
             if user.username == 'admins':
-                return redirect(url_for('web.index'))
-            else:
-                return redirect(url_for('web.user_portal', user_id=user.id))
-        else:
-            flash('Username atau password salah', 'error')
-            
-    return render_template('login.html')
+                return redirect(url_for('web.admin_dashboard'))
+            return redirect(url_for('web.user_portal', user_id=user.id))
+
+        flash('Username atau password salah', 'error')
+
+    return render_template('login.html', selected_role=selected_role)
 
 
 @web_bp.route('/logout')
@@ -96,12 +84,12 @@ def logout():
     """Logout user"""
     session.clear()
     flash('Anda telah berhasil logout.', 'success')
-    return redirect(url_for('web.login'))
+    return redirect(url_for('web.index'))
 
 
 @web_bp.route('/user/<int:user_id>')
 def user_portal(user_id):
-    """User portal - upload & verify in one page"""
+    """User portal - upload signatures and verify."""
     try:
         user = db.session.query(User).filter_by(id=user_id).first()
         if not user:
@@ -109,11 +97,18 @@ def user_portal(user_id):
             return redirect(url_for('web.register'))
 
         sig_count = user.reference_signatures.count()
-        histories = user.verification_history.order_by(
+        reference_signatures = user.reference_signatures.all()
+        history_list = user.verification_history.order_by(
             VerificationHistory.verification_date.desc()
         ).limit(10).all()
 
-        return render_template('user_portal.html', user=user, sig_count=sig_count, histories=histories)
+        return render_template(
+            'user/dashboard.html',
+            user=user,
+            sig_count=sig_count,
+            reference_signatures=reference_signatures,
+            history_list=history_list
+        )
     except Exception as e:
         logger.error(f"Error in user_portal: {str(e)}")
         flash(f'Error: {str(e)}', 'error')
@@ -123,7 +118,22 @@ def user_portal(user_id):
 
 @web_bp.route('/')
 def index():
-    """Dashboard"""
+    """Landing page for unauthenticated users."""
+    if session.get('user_id'):
+        if session.get('username') == 'admins':
+            return redirect(url_for('web.admin_dashboard'))
+        return redirect(url_for('web.user_portal', user_id=session.get('user_id')))
+    return render_template('landing.html')
+
+
+@web_bp.route('/admin')
+def admin_dashboard():
+    """Admin dashboard for monitoring signature verification history."""
+    if session.get('username') != 'admins':
+        if session.get('user_id'):
+            return redirect(url_for('web.user_portal', user_id=session['user_id']))
+        return redirect(url_for('web.login'))
+
     try:
         total_users = db.session.query(User).count()
         registered_users = db.session.query(User).filter_by(is_registered=True).count()
@@ -139,8 +149,12 @@ def index():
             prediction='FORGED'
         ).count()
         
-        # List of all registered users (excluding admin) for selection
         users_list = db.session.query(User).filter(User.username != 'admins').all()
+        
+        # Calculate system accuracy (average confidence)
+        avg_confidence = db.session.query(
+            db.func.avg(VerificationHistory.confidence)
+        ).scalar() or 0.0
         
         stats = {
             'total_users': total_users,
@@ -148,15 +162,16 @@ def index():
             'total_verifications': total_verifications,
             'genuine_count': genuine_count,
             'forged_count': forged_count,
-            'recent_verifications': recent_verifications[:5],
-            'users_list': users_list
+            'recent_verifications': recent_verifications,
+            'users_list': users_list,
+            'avg_confidence': float(avg_confidence)
         }
         
-        return render_template('index.html', stats=stats)
+        return render_template('admin/dashboard.html', stats=stats)
     except Exception as e:
-        logger.error(f"Error in index: {str(e)}")
+        logger.error(f"Error in admin_dashboard: {str(e)}")
         flash(f"Error loading dashboard: {str(e)}", 'error')
-        return render_template('index.html', stats={})
+        return render_template('admin/dashboard.html', stats={})
 
 
 @web_bp.route('/register', methods=['GET', 'POST'])
@@ -270,13 +285,13 @@ def upload_signatures(user_id):
                 session['username'] = user.username
                 
                 flash(f'Successfully registered {len(image_paths)} signatures!', 'success')
-                return redirect(url_for('web.verify', user_id=user_id))
+                return redirect(url_for('web.user_portal', user_id=user_id))
                 
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error registering signatures: {str(e)}")
                 flash(f'Error: {str(e)}', 'error')
-                return redirect(request.url)
+                return redirect(url_for('web.user_portal', user_id=user_id))
         
         return render_template('register.html', user=user, upload_page=True)
         
@@ -335,10 +350,11 @@ def verify(user_id):
                 db.session.rollback()
                 logger.error(f"Error during verification: {str(e)}")
                 flash(f'Error: {str(e)}', 'error')
-                return redirect(request.url)
+                return redirect(url_for('web.user_portal', user_id=user_id))
         
         reference_count = user.reference_signatures.count()
-        return render_template('verify.html', user=user, reference_count=reference_count)
+        # Verification form is embedded in user dashboard — redirect there
+        return redirect(url_for('web.user_portal', user_id=user_id))
         
     except Exception as e:
         logger.error(f"Error in verify: {str(e)}")

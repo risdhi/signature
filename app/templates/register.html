@@ -1,283 +1,284 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {% block title %}Register - Signature Verification{%
+endblock %} {% block content %}
 
-{% block title %}Register - Signature Verification{% endblock %}
+<section class="section-wrapper register-section">
+  {% if not upload_page %}
 
-{% block content %}
-<section class="register-section">
-    {% if not upload_page %}
-    <h2>Register New User</h2>
-    
-    <div class="form-container">
-        <form method="POST" class="form">
-            <div class="form-group">
-                <label for="username">Username *</label>
-                <input type="text" id="username" name="username" required 
-                       placeholder="Enter username" class="form-control">
-            </div>
+  <div class="section-card" style="max-width: 600px; margin: 0 auto">
+    <div style="padding: 2rem; text-align: center">
+      <h2>Buat Akun Forensik</h2>
+      <p class="subtitle">
+        Daftarkan akun untuk mengakses sistem verifikasi tanda tangan berbasis
+        AI.
+      </p>
+    </div>
 
-            <div class="form-group">
-                <label for="email">Email *</label>
-                <input type="email" id="email" name="email" required 
-                       placeholder="Enter email address" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label for="full_name">Full Name</label>
-                <input type="text" id="full_name" name="full_name" 
-                       placeholder="Enter full name (optional)" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password *</label>
-                <input type="password" id="password" name="password" required 
-                       placeholder="Enter password" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label for="confirm_password">Confirm Password *</label>
-                <input type="password" id="confirm_password" name="confirm_password" required 
-                       placeholder="Confirm password" class="form-control">
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-block">Create User</button>
-        </form>
-        <div class="login-link" style="text-align: center; margin-top: 1rem;">
-            <p>Already have an account? <a href="{{ url_for('web.login') }}" style="color: var(--primary-color); font-weight: 500;">Login here</a></p>
+    <div style="padding: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.08)">
+      <form method="POST" class="form">
+        <div class="form-group">
+          <label for="username">Username *</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            placeholder="Masukkan username"
+          />
         </div>
+
+        <div class="form-group">
+          <label for="email">Alamat Email *</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="email@example.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="full_name">Nama Lengkap</label>
+          <input
+            type="text"
+            id="full_name"
+            name="full_name"
+            placeholder="Masukkan nama lengkap (opsional)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Kata Sandi *</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="Masukkan kata sandi"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password">Konfirmasi Kata Sandi *</label>
+          <input
+            type="password"
+            id="confirm_password"
+            name="confirm_password"
+            required
+            placeholder="Konfirmasi kata sandi"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          style="margin-top: 1.5rem"
+        >
+          Buat Akun
+        </button>
+      </form>
+
+      <div class="login-link" style="text-align: center; margin-top: 1.5rem">
+        <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem">
+          Sudah punya akun?
+          <a href="{{ url_for('web.login') }}" class="text-link"
+            >Masuk di sini</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box" style="max-width: 600px; margin: 2rem auto 0">
+    <h3>ℹ️ Proses Pendaftaran</h3>
+    <ol style="margin: 0; padding-left: 1.25rem">
+      <li style="margin-bottom: 0.5rem">Isi formulir dengan data Anda</li>
+      <li style="margin-bottom: 0.5rem">
+        Anda akan diminta mengunggah 3-5 tanda tangan asli
+      </li>
+      <li>Tanda tangan akan disimpan sebagai referensi verifikasi</li>
+    </ol>
+  </div>
+
+  {% else %}
+
+  <div class="section-card" style="max-width: 700px; margin: 0 auto">
+    <div style="padding: 2rem; text-align: center">
+      <h2>Unggah Tanda Tangan Referensi</h2>
+      <p class="subtitle">
+        Unggah 3-5 tanda tangan asli untuk pengguna:
+        <strong>{{ user.username }}</strong>
+      </p>
     </div>
 
-    <div class="info-box">
-        <h3>ℹ️ Registration Process</h3>
-        <p>1. Enter your username and email</p>
-        <p>2. You'll be taken to upload 3-5 genuine signatures</p>
-        <p>3. These will serve as reference for verification</p>
+    <div style="padding: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.08)">
+      <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="upload-form"
+        id="uploadForm"
+      >
+        <div
+          class="upload-area"
+          id="uploadArea"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          <div class="upload-icon">📁</div>
+          <p style="margin-bottom: 0.25rem">
+            <strong>Klik atau seret file ke sini</strong>
+          </p>
+          <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem">
+            PNG, JPG, JPEG, GIF, BMP · Pilih 3–5 file
+          </p>
+          <input
+            type="file"
+            name="files"
+            id="fileInput"
+            multiple
+            accept="image/*"
+            style="display: none"
+          />
+        </div>
+
+        <div
+          class="file-list"
+          id="fileList"
+          style="display: none; margin-top: 1.5rem"
+        ></div>
+        <p
+          class="hint"
+          id="fileCount"
+          style="
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+          "
+        ></p>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          id="submitBtn"
+          disabled
+          style="margin-top: 1.5rem"
+        >
+          📤 Unggah & Simpan
+        </button>
+      </form>
+
+      {% if user.is_registered %}
+      <p
+        style="
+          text-align: center;
+          color: var(--text-muted);
+          font-size: 0.9rem;
+          margin-top: 1rem;
+        "
+      >
+        ✓ Anda sudah memiliki {{ sig_count }} tanda tangan terdaftar. Tambahkan
+        file baru untuk memperbarui referensi.
+      </p>
+      {% else %}
+      <p
+        style="
+          text-align: center;
+          color: var(--text-muted);
+          font-size: 0.9rem;
+          margin-top: 1rem;
+        "
+      >
+        Silakan unggah minimal 3 tanda tangan asli untuk melanjutkan.
+      </p>
+      {% endif %}
     </div>
+  </div>
 
-    {% else %}
-    <h2>Upload Reference Signatures</h2>
-    <p class="subtitle">Upload 3-5 genuine signatures for user: <strong>{{ user.username }}</strong></p>
+  <div class="info-box" style="max-width: 700px; margin: 2rem auto 0">
+    <h3>✅ Persyaratan</h3>
+    <ul style="margin: 0; padding-left: 1.25rem">
+      <li style="margin-bottom: 0.5rem">Minimum: 3 tanda tangan asli</li>
+      <li style="margin-bottom: 0.5rem">Maksimum: 5 tanda tangan asli</li>
+      <li style="margin-bottom: 0.5rem">Format: PNG, JPG, JPEG, GIF, BMP</li>
+      <li style="margin-bottom: 0.5rem">
+        Tanda tangan yang jelas dan terang lebih disukai
+      </li>
+      <li>Gaya penandatanganan yang konsisten direkomendasikan</li>
+    </ul>
+  </div>
 
-    <div class="upload-form-container">
-        <form method="POST" enctype="multipart/form-data" class="upload-form">
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <p>Drag signatures here or click to browse</p>
-                <input type="file" name="files" id="fileInput" multiple accept="image/*" 
-                       style="display: none;">
-            </div>
-
-            <div class="file-list" id="fileList"></div>
-
-            <button type="submit" class="btn btn-primary btn-block" id="submitBtn" disabled>
-                Upload {{ user.reference_signatures.count() or 0 }}/3-5 Signatures
-            </button>
-        </form>
-    </div>
-
-    <div class="info-box">
-        <h3>✅ Requirements</h3>
-        <ul>
-            <li>Minimum: 3 genuine signatures</li>
-            <li>Maximum: 5 genuine signatures</li>
-            <li>Format: PNG, JPG, JPEG, GIF, BMP</li>
-            <li>Clear, well-lit signatures preferred</li>
-            <li>Consistent signing style recommended</li>
-        </ul>
-    </div>
-
-    {% endif %}
+  {% endif %}
 </section>
 
-<style>
-.register-section {
-    max-width: 600px;
-    margin: 2rem auto;
-    padding: 2rem;
-}
-
-.form-container, .upload-form-container {
-    background: white;
-    border-radius: 8px;
-    padding: 2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin: 1.5rem 0;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    color: #333;
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
-}
-
-.upload-area {
-    border: 2px dashed #0066cc;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    background: #f9f9f9;
-}
-
-.upload-area:hover {
-    border-color: #0052a3;
-    background: #f0f7ff;
-}
-
-.upload-area.dragover {
-    border-color: #28a745;
-    background: #f0fff4;
-}
-
-.upload-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-}
-
-.file-list {
-    margin: 1.5rem 0;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.file-item {
-    background: #f5f5f5;
-    padding: 0.75rem;
-    margin: 0.5rem 0;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.file-item.error {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.file-item.success {
-    background: #d4edda;
-    color: #155724;
-}
-
-.btn-block {
-    width: 100%;
-}
-
-.info-box {
-    background: #e3f2fd;
-    border-left: 4px solid #0066cc;
-    padding: 1.5rem;
-    border-radius: 4px;
-    margin: 1.5rem 0;
-}
-
-.info-box h3 {
-    margin-top: 0;
-    color: #0066cc;
-}
-
-.info-box ul {
-    margin: 0;
-    padding-left: 1.5rem;
-}
-
-.info-box li {
-    margin: 0.5rem 0;
-}
-
-.subtitle {
-    color: #666;
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
-}
-</style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-    const fileList = document.getElementById('fileList');
-    const submitBtn = document.getElementById('submitBtn');
+  document.addEventListener("DOMContentLoaded", function () {
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const fileList = document.getElementById("fileList");
+    const fileCount = document.getElementById("fileCount");
+    const submitBtn = document.getElementById("submitBtn");
     let selectedFiles = [];
 
     if (uploadArea) {
-        uploadArea.addEventListener('click', () => fileInput.click());
-
-        ['dragenter', 'dragover'].forEach(event => {
-            uploadArea.addEventListener(event, (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
+      ["dragenter", "dragover"].forEach((event) => {
+        uploadArea.addEventListener(event, (e) => {
+          e.preventDefault();
+          uploadArea.style.borderColor = "var(--primary)";
+          uploadArea.style.background = "rgba(128, 131, 255, 0.08)";
         });
+      });
 
-        ['dragleave', 'drop'].forEach(event => {
-            uploadArea.addEventListener(event, (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-            });
+      ["dragleave", "drop"].forEach((event) => {
+        uploadArea.addEventListener(event, (e) => {
+          e.preventDefault();
+          uploadArea.style.borderColor = "";
+          uploadArea.style.background = "";
         });
+      });
 
-        uploadArea.addEventListener('drop', (e) => {
-            selectedFiles = Array.from(e.dataTransfer.files);
-            updateFileList();
-        });
+      uploadArea.addEventListener("drop", (e) => {
+        selectedFiles = Array.from(e.dataTransfer.files);
+        updateFileList();
+      });
 
-        fileInput.addEventListener('change', (e) => {
-            selectedFiles = Array.from(e.target.files);
-            updateFileList();
-        });
+      fileInput.addEventListener("change", (e) => {
+        selectedFiles = Array.from(e.target.files);
+        updateFileList();
+      });
 
-        function updateFileList() {
-            fileList.innerHTML = '';
-            selectedFiles.forEach((file, idx) => {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                item.innerHTML = `
+      function updateFileList() {
+        fileList.innerHTML = "";
+        selectedFiles.forEach((file, idx) => {
+          const item = document.createElement("div");
+          item.className = "file-item";
+          item.style.cssText =
+            "display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0.75rem; margin-bottom: 0.5rem;";
+          item.innerHTML = `
                     <span>${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
-                    <button type="button" class="btn-small" onclick="removeFile(${idx})">✕</button>
+                    <button type="button" style="background: none; border: none; color: var(--error); cursor: pointer; font-weight: bold;" onclick="removeFile(${idx})">✕</button>
                 `;
-                fileList.appendChild(item);
-            });
-            
-            if (submitBtn) {
-                submitBtn.disabled = selectedFiles.length < 3;
-                submitBtn.textContent = `Upload ${selectedFiles.length}/3-5 Signatures`;
-            }
-        }
-
-        window.removeFile = function(idx) {
-            selectedFiles.splice(idx, 1);
-            updateFileList();
-        };
-    }
-
-    // Alert close button
-    document.querySelectorAll('.alert-close').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.parentElement.style.display = 'none';
+          fileList.appendChild(item);
         });
-    });
-});
+
+        if (selectedFiles.length > 0) {
+          fileList.style.display = "block";
+          fileCount.textContent = `${selectedFiles.length} file dipilih`;
+          submitBtn.disabled =
+            selectedFiles.length < 3 || selectedFiles.length > 5;
+        } else {
+          fileList.style.display = "none";
+          fileCount.textContent = "";
+          submitBtn.disabled = true;
+        }
+      }
+
+      window.removeFile = function (idx) {
+        selectedFiles.splice(idx, 1);
+        fileInput.value = "";
+        updateFileList();
+      };
+    }
+  });
 </script>
+
 {% endblock %}
