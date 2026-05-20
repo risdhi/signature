@@ -7,6 +7,14 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet"/>
+<style>
+  .cropper-container { border-radius: 1rem; overflow: hidden; }
+  .cropper-crop-box { border: 2px dashed rgba(192,193,255,0.8); }
+  .cropper-view-box { outline: 2px solid rgba(192,193,255,0.6); }
+  .cropper-point { background-color: #c0c1ff; width:10px; height:10px; border-radius:50%; }
+  .cropper-line { background-color: rgba(192,193,255,0.4); }
+</style>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -290,7 +298,7 @@
 </div>
 <h3 class="font-headline-md text-headline-md text-on-surface">Inspektor Verifikasi</h3>
 </div>
-<p class="font-body-md text-body-md text-on-surface-variant mb-6">Unggah 1 tanda tangan uji untuk dibandingkan dengan profil referensi terdaftar.</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-5">Unggah dokumen atau gambar, lalu gambar kotak di area tanda tangan untuk diverifikasi.</p>
 {% if not user.is_registered %}
 <div class="p-4 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-body-md text-sm mb-4">
   ⚠️ Anda belum mendaftarkan tanda tangan referensi Anda sendiri. Anda masih dapat melakukan verifikasi untuk pengguna terdaftar lainnya.
@@ -304,9 +312,9 @@
 <!-- Verify Form -->
 <form action="{{ url_for('web.verify', user_id=user.id) }}" method="POST" enctype="multipart/form-data" id="verifyForm">
 {% if registered_users %}
-<div class="mb-6">
+<div class="mb-5">
   <label for="targetUser" class="block font-body-md text-sm font-medium text-on-surface mb-2">Pilih User Target</label>
-  <select id="targetUser" name="target_user_id" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:border-primary focus:ring-primary/20 transition-all font-body-md">
+  <select id="targetUser" name="target_user_id" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:border-primary transition-all font-body-md">
       {% for u in registered_users %}
           <option value="{{ u.id }}" {% if u.id == user.id %}selected{% endif %}>{{ u.full_name or u.username }} (@{{ u.username }})</option>
       {% endfor %}
@@ -314,22 +322,61 @@
 </div>
 {% endif %}
 
-<div class="mb-6">
+<div class="mb-5">
   <label for="verificationDescription" class="block font-body-md text-sm font-medium text-on-surface mb-2">Deskripsi / Keterangan</label>
-  <textarea id="verificationDescription" name="description" rows="3" placeholder="Contoh: Verifikasi Dokumen Kontrak Kerja PT ABC..." class="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:border-primary focus:ring-primary/20 transition-all font-body-md"></textarea>
+  <textarea id="verificationDescription" name="description" rows="2" placeholder="Contoh: Verifikasi Dokumen Kontrak Kerja PT ABC..." class="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:border-primary transition-all font-body-md"></textarea>
 </div>
 
-<label for="testFile" class="relative group cursor-pointer mb-6 block">
-<div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary opacity-20 group-hover:opacity-40 blur transition duration-1000 group-hover:duration-200"></div>
-<div class="relative bg-surface-container rounded-2xl p-10 border border-outline-variant/30 flex flex-col items-center justify-center text-center" id="dropTarget">
-<span class="material-symbols-outlined text-5xl text-outline-variant mb-4 group-hover:text-primary transition-colors" id="dropIcon">content_copy</span>
-<p class="font-body-md text-body-md text-on-surface font-semibold" id="dropLabel">Tanda Tangan Uji</p>
-<p class="font-label-sm text-label-sm text-outline mt-1">Hanya 1 file (PNG/JPG)</p>
-<img id="testPreview" class="hidden mt-4 max-h-32 rounded-xl border border-outline-variant/30 mx-auto" src="" alt="Preview">
+<!-- Document Upload Dropzone (shown before file is selected) -->
+<div id="dropzoneWrapper" class="mb-5">
+  <label for="testFile" class="relative group cursor-pointer block">
+    <div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary opacity-20 group-hover:opacity-40 blur transition duration-1000 group-hover:duration-200"></div>
+    <div class="relative bg-surface-container rounded-2xl p-8 border border-dashed border-outline-variant/50 flex flex-col items-center justify-center text-center gap-3 transition-all group-hover:border-primary/50" id="dropTarget">
+      <span class="material-symbols-outlined text-4xl text-outline-variant group-hover:text-primary transition-colors">upload_file</span>
+      <div>
+        <p class="font-body-md text-body-md text-on-surface font-semibold">Unggah Dokumen / Gambar</p>
+        <p class="font-label-sm text-label-sm text-outline mt-1">PNG, JPG, atau PDF — lalu pilih area tanda tangan</p>
+      </div>
+    </div>
+  </label>
+  <input type="file" id="testFile" name="file" accept="image/*,application/pdf" class="hidden" onchange="handleDocumentUpload(this)" {% if not registered_users %}disabled{% endif %}>
 </div>
-<input type="file" id="testFile" name="file" accept="image/*" class="hidden" onchange="previewTestFile(this)" {% if not registered_users %}disabled{% endif %}>
-</label>
-<div class="space-y-4">
+
+<!-- Crop Workspace (hidden until file is selected) -->
+<div id="cropWorkspace" class="hidden mb-5">
+  <!-- PDF Page Controls (hidden for images) -->
+  <div id="pdfControls" class="hidden flex items-center justify-between mb-3">
+    <div class="flex items-center gap-2">
+      <button type="button" id="prevPageBtn" onclick="changePdfPage(-1)" class="w-8 h-8 rounded-lg bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:border-primary/50 transition-all disabled:opacity-40" disabled>
+        <span class="material-symbols-outlined text-sm">chevron_left</span>
+      </button>
+      <span class="font-label-sm text-sm text-on-surface-variant">Hal. <span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+      <button type="button" id="nextPageBtn" onclick="changePdfPage(1)" class="w-8 h-8 rounded-lg bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:border-primary/50 transition-all disabled:opacity-40" disabled>
+        <span class="material-symbols-outlined text-sm">chevron_right</span>
+      </button>
+    </div>
+    <span class="font-label-sm text-xs text-outline">Navigasi halaman PDF</span>
+  </div>
+
+  <!-- Crop Hint -->
+  <div class="flex items-center gap-2 mb-3 px-1">
+    <span class="material-symbols-outlined text-primary text-base">crop</span>
+    <p class="font-label-sm text-sm text-on-surface-variant">Gambar kotak di area <span class="text-primary font-semibold">tanda tangan saja</span>. Teks di sekitar tidak akan ikut diverifikasi.</p>
+  </div>
+
+  <!-- Cropper image/canvas container -->
+  <div class="relative bg-surface-container-lowest rounded-2xl overflow-hidden border border-primary/20" style="max-height:380px;">
+    <img id="cropImage" class="block max-w-full" style="display:none;">
+    <canvas id="pdfCanvas" style="display:none; max-width:100%;"></canvas>
+  </div>
+
+  <!-- Reset / Change File button -->
+  <button type="button" onclick="resetDocumentUpload()" class="mt-3 w-full py-2 rounded-xl border border-outline-variant/30 text-on-surface-variant font-label-sm text-sm flex items-center justify-center gap-2 hover:border-primary/40 hover:text-primary transition-all">
+    <span class="material-symbols-outlined text-sm">refresh</span> Ganti Dokumen
+  </button>
+</div>
+
+<div class="space-y-3">
 <button type="submit" id="verifyBtn" class="w-full bg-primary text-on-primary-container font-headline-md text-headline-md py-4 rounded-xl flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(192,193,255,0.3)] transition-all duration-500 group overflow-hidden relative {% if not registered_users %}opacity-50 cursor-not-allowed{% endif %}" onclick="return submitVerify(event)" {% if not registered_users %}disabled{% endif %}>
 <span class="relative z-10 flex items-center gap-2">
 <span class="material-symbols-outlined">bolt</span>
@@ -337,7 +384,7 @@
 </span>
 <div class="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
 </button>
-<p class="text-center font-label-sm text-label-sm text-outline italic">Proses ini akan memakan waktu kurang dari 3 detik.</p>
+<p class="text-center font-label-sm text-label-sm text-outline italic">Proses ini akan memakan waktu beberapa detik.</p>
 </div>
 </form>
 </div>
@@ -408,14 +455,27 @@
 <span class="text-[10px] font-label-sm">Profil</span>
 </a>
 </nav>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
+    // --- PDF.js worker setup ---
+    if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    let cropperInstance = null;
+    let pdfDoc = null;
+    let pdfCurrentPage = 1;
+    let isPdf = false;
+
+    // ── Reference signature preview (unchanged) ──
     function previewRefFiles(input) {
         const preview = document.getElementById('newFilePreview');
         const btn = document.getElementById('uploadBtn');
         preview.innerHTML = '';
         preview.classList.remove('hidden');
         btn.classList.remove('hidden');
-        Array.from(input.files).forEach((file, i) => {
+        Array.from(input.files).forEach((file) => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const div = document.createElement('div');
@@ -427,68 +487,193 @@
         });
     }
 
-    function previewTestFile(input) {
+    // ── Main handler: called when user picks a file ──
+    function handleDocumentUpload(input) {
         const file = input.files[0];
         if (!file) return;
+        isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+            loadPdf(file);
+        } else {
+            loadImageFile(file);
+        }
+    }
+
+    // ── Load a plain image and init Cropper ──
+    function loadImageFile(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const preview = document.getElementById('testPreview');
-            const icon = document.getElementById('dropIcon');
-            const label = document.getElementById('dropLabel');
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-            icon.classList.add('hidden');
-            label.textContent = file.name;
+            document.getElementById('pdfControls').classList.add('hidden');
+            const img = document.getElementById('cropImage');
+            const canvas = document.getElementById('pdfCanvas');
+            canvas.style.display = 'none';
+            img.style.display = 'block';
+            img.src = e.target.result;
+            img.onload = () => initCropper(img);
+            showCropWorkspace();
         };
         reader.readAsDataURL(file);
     }
 
+    // ── Load PDF using pdf.js, render given page to canvas ──
+    async function loadPdf(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        pdfCurrentPage = 1;
+        const totalPages = pdfDoc.numPages;
+        document.getElementById('totalPages').textContent = totalPages;
+        document.getElementById('currentPage').textContent = 1;
+        document.getElementById('prevPageBtn').disabled = true;
+        document.getElementById('nextPageBtn').disabled = (totalPages <= 1);
+        document.getElementById('pdfControls').classList.remove('hidden');
+        await renderPdfPage(pdfCurrentPage);
+        showCropWorkspace();
+    }
+
+    async function renderPdfPage(pageNum) {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.0 });
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.display = 'block';
+        const img = document.getElementById('cropImage');
+        img.style.display = 'none';
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        initCropper(canvas);
+    }
+
+    async function changePdfPage(delta) {
+        const newPage = pdfCurrentPage + delta;
+        if (newPage < 1 || newPage > pdfDoc.numPages) return;
+        pdfCurrentPage = newPage;
+        document.getElementById('currentPage').textContent = newPage;
+        document.getElementById('prevPageBtn').disabled = (newPage <= 1);
+        document.getElementById('nextPageBtn').disabled = (newPage >= pdfDoc.numPages);
+        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+        await renderPdfPage(newPage);
+    }
+
+    // ── Initialize / re-initialize Cropper.js on a given element ──
+    function initCropper(element) {
+        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+        cropperInstance = new Cropper(element, {
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 0.45,
+            movable: true,
+            zoomable: true,
+            rotatable: false,
+            scalable: false,
+            background: true,
+            highlight: true,
+            guides: true,
+            center: true,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+        });
+    }
+
+    // ── Show the crop workspace, hide dropzone ──
+    function showCropWorkspace() {
+        document.getElementById('dropzoneWrapper').classList.add('hidden');
+        document.getElementById('cropWorkspace').classList.remove('hidden');
+    }
+
+    // ── Reset back to dropzone ──
+    function resetDocumentUpload() {
+        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+        pdfDoc = null;
+        isPdf = false;
+        document.getElementById('testFile').value = '';
+        document.getElementById('cropImage').src = '';
+        document.getElementById('cropImage').style.display = 'none';
+        const canvas = document.getElementById('pdfCanvas');
+        canvas.style.display = 'none';
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('pdfControls').classList.add('hidden');
+        document.getElementById('cropWorkspace').classList.add('hidden');
+        document.getElementById('dropzoneWrapper').classList.remove('hidden');
+    }
+
+    // ── Form submission: crop → blob → DataTransfer → submit ──
     function submitVerify(e) {
-        const fileInput = document.getElementById('testFile');
-        if (!fileInput.files || fileInput.files.length === 0) {
-            e.preventDefault();
-            alert('Pilih file tanda tangan uji terlebih dahulu.');
+        e.preventDefault();
+
+        // Update form action from target user dropdown
+        const targetUserSelect = document.getElementById('targetUser');
+        const form = document.getElementById('verifyForm');
+        if (targetUserSelect && form) {
+            form.action = `/verify/${targetUserSelect.value}`;
+        }
+
+        if (!cropperInstance) {
+            // No cropper — require file selection
+            alert('Silakan pilih dokumen terlebih dahulu dan tandai area tanda tangan.');
             return false;
         }
 
-        // Set action dynamically to the selected user target ID
-        const targetUserSelect = document.getElementById('targetUser');
-        if (targetUserSelect) {
-            const userId = targetUserSelect.value;
-            const form = document.getElementById('verifyForm');
-            if (form) {
-                form.action = `/verify/${userId}`;
-            }
+        // Get cropped canvas at natural resolution
+        const croppedCanvas = cropperInstance.getCroppedCanvas({
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+
+        if (!croppedCanvas) {
+            alert('Gagal memotong gambar. Silakan coba lagi.');
+            return false;
         }
 
+        // Show loading modal immediately
         const modal = document.getElementById('loadingModal');
         const progress = document.getElementById('progress-bar');
         modal.classList.remove('opacity-0', 'pointer-events-none');
         let width = 0;
         const interval = setInterval(() => {
-            if (width >= 90) { clearInterval(interval); }
+            if (width >= 85) { clearInterval(interval); }
             else { width += 2; progress.style.width = width + '%'; }
         }, 60);
-        return true;
+
+        // Convert cropped canvas to PNG blob, inject into file input, submit
+        croppedCanvas.toBlob((blob) => {
+            if (!blob) {
+                clearInterval(interval);
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                alert('Gagal memproses gambar. Silakan coba lagi.');
+                return;
+            }
+            const croppedFile = new File([blob], 'cropped_signature.png', { type: 'image/png' });
+            const dt = new DataTransfer();
+            dt.items.add(croppedFile);
+            document.getElementById('testFile').files = dt.files;
+            form.submit();
+        }, 'image/png', 1.0);
+
+        return false; // prevent default — we submit manually after blob creation
     }
 
-    // Dropzone drag-and-drop for test file
+    // ── Drag-and-drop onto dropzone ──
     const dropTarget = document.getElementById('dropTarget');
     if (dropTarget) {
         dropTarget.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropTarget.classList.add('border-primary', 'bg-primary/5');
+            dropTarget.classList.add('border-primary/70', 'bg-primary/5');
         });
         dropTarget.addEventListener('dragleave', () => {
-            dropTarget.classList.remove('border-primary', 'bg-primary/5');
+            dropTarget.classList.remove('border-primary/70', 'bg-primary/5');
         });
         dropTarget.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropTarget.classList.remove('border-primary', 'bg-primary/5');
+            dropTarget.classList.remove('border-primary/70', 'bg-primary/5');
             const fileInput = document.getElementById('testFile');
             if (e.dataTransfer.files.length > 0) {
-                fileInput.files = e.dataTransfer.files;
-                previewTestFile(fileInput);
+                const dt = new DataTransfer();
+                dt.items.add(e.dataTransfer.files[0]);
+                fileInput.files = dt.files;
+                handleDocumentUpload(fileInput);
             }
         });
     }
