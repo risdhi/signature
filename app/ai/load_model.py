@@ -220,7 +220,7 @@ class ModelLoader:
         x = base(x, training=False)
 
         x = GlobalAveragePooling2D(name='gap')(x)
-        x = Dense(embedding_dim, activation='relu', name='embedding_dense')(x)
+        x = Dense(embedding_dim, activation=None, name='embedding_dense')(x)
         x = BatchNormalization(name='embedding_bn')(x)
         # L2 normalize so cosine similarity = dot product
         x = Lambda(lambda v: tf.math.l2_normalize(v, axis=1), name='l2_norm')(x)

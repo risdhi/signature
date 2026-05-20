@@ -1,5 +1,6 @@
 """
-Test model loading and verify weights are actually loaded (not random).
+Validate that the MobileNetV2 fallback produces discriminative embeddings.
+Run: .venv/bin/python test_model.py
 """
 import os
 import sys
@@ -7,67 +8,83 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from app.ai.load_model import ModelLoader, load_pretrained_model
+# Reset singletons so we always do a fresh load
+from app.ai.load_model import ModelLoader
+from app.ai import load_model as lm_module
 
-# Reset singleton so we don't use cached model from previous test
 ModelLoader._instance = None
 ModelLoader._model = None
+ModelLoader._model_type = None
+
+from app.ai.load_model import load_pretrained_model
 
 model_path = 'model/siamese_signature_model.keras'
 embedding_dim = 128
 
-print("=" * 60)
-print("Loading model with fixed loader...")
-print("=" * 60)
+print("=" * 65)
+print("  Testing Signature Verification Model")
+print("=" * 65)
 model = load_pretrained_model(model_path, embedding_dim)
-print(f"\nModel loaded: {model.name}")
-model.summary()
+model_type = ModelLoader.get_model_type()
+print(f"\n✅ Model loaded  —  type: {model_type}")
+print(f"   Input  : {model.input_shape}")
+print(f"   Output : {model.output_shape}")
 
-# Test 1: Same image → similarity must be 1.0
-img_same = np.random.rand(1, 105, 105, 1).astype(np.float32)
-emb_same_a = model.predict(img_same, verbose=0).squeeze()
-emb_same_b = model.predict(img_same, verbose=0).squeeze()
-emb_same_a /= (np.linalg.norm(emb_same_a) + 1e-8)
-emb_same_b /= (np.linalg.norm(emb_same_b) + 1e-8)
-cos_same = float(np.dot(emb_same_a, emb_same_b))
+# ---------- Similarity tests ----------
+def embed(m, arr):
+    e = m.predict(arr, verbose=0).squeeze()
+    n = np.linalg.norm(e)
+    return e / n if n > 1e-8 else e
 
-# Test 2: Two completely different random images
-img_a = np.random.rand(1, 105, 105, 1).astype(np.float32)
-img_b = np.random.rand(1, 105, 105, 1).astype(np.float32)
-emb_a = model.predict(img_a, verbose=0).squeeze()
-emb_b = model.predict(img_b, verbose=0).squeeze()
-emb_a /= (np.linalg.norm(emb_a) + 1e-8)
-emb_b /= (np.linalg.norm(emb_b) + 1e-8)
-cos_diff = float(np.dot(emb_a, emb_b))
-euc_diff = float(np.linalg.norm(emb_a - emb_b))
+def cosine(a, b):
+    return float(np.dot(a, b))
 
-# Test 3: All-zeros vs all-ones
-img_zero = np.zeros((1, 105, 105, 1), dtype=np.float32)
-img_ones = np.ones((1, 105, 105, 1), dtype=np.float32)
-emb_zero = model.predict(img_zero, verbose=0).squeeze()
-emb_ones = model.predict(img_ones, verbose=0).squeeze()
-emb_zero /= (np.linalg.norm(emb_zero) + 1e-8)
-emb_ones /= (np.linalg.norm(emb_ones) + 1e-8)
-cos_zero_ones = float(np.dot(emb_zero, emb_ones))
-euc_zero_ones = float(np.linalg.norm(emb_zero - emb_ones))
+def euclid(a, b):
+    return float(np.linalg.norm(a - b))
 
-print("\n" + "=" * 60)
-print("VERIFICATION TESTS")
-print("=" * 60)
-print(f"Same image cosine similarity      : {cos_same:.6f}  (expected ~1.0)")
-print(f"Random vs Random cosine similarity: {cos_diff:.6f}  (expected < 0.82 if weights loaded)")
-print(f"Random vs Random euclidean dist   : {euc_diff:.6f}  (expected > 0.25 if weights loaded)")
-print(f"Zeros vs Ones cosine similarity   : {cos_zero_ones:.6f}")
-print(f"Zeros vs Ones euclidean dist      : {euc_zero_ones:.6f}")
+input_shape = model.input_shape[1:]   # (H, W, C)
 
-print("\n" + "=" * 60)
-if cos_diff > 0.98:
-    print("❌ WEIGHTS STILL RANDOM — cosine similarity near 1.0 for different images!")
-    print("   Check logs above for any weight loading errors.")
-elif cos_diff > 0.82:
-    print(f"⚠️  WARNING: Different images still score {cos_diff:.3f} cosine similarity > 0.82 threshold")
-    print("   They will be classified as GENUINE. Consider tightening thresholds.")
+# Same image → must be ~1.0
+img_x = np.random.rand(1, *input_shape).astype(np.float32) * 255
+emb_x1 = embed(model, img_x)
+emb_x2 = embed(model, img_x)
+cos_same = cosine(emb_x1, emb_x2)
+
+# Two completely different random images
+img_a = np.random.rand(1, *input_shape).astype(np.float32) * 255
+img_b = np.random.rand(1, *input_shape).astype(np.float32) * 255
+emb_a = embed(model, img_a)
+emb_b = embed(model, img_b)
+cos_rand = cosine(emb_a, emb_b)
+euc_rand = euclid(emb_a, emb_b)
+
+# All-zero vs all-ones (extreme difference)
+img_zeros = np.zeros((1, *input_shape), dtype=np.float32)
+img_ones  = np.ones ((1, *input_shape), dtype=np.float32) * 255
+emb_zeros = embed(model, img_zeros)
+emb_ones  = embed(model, img_ones)
+cos_ext = cosine(emb_zeros, emb_ones)
+euc_ext = euclid(emb_zeros, emb_ones)
+
+print("\n" + "─" * 65)
+print("  Embedding Similarity Tests")
+print("─" * 65)
+print(f"  Same image  (cos)  : {cos_same:.6f}   [expected ≈ 1.0]")
+print(f"  Random pair (cos)  : {cos_rand:.6f}   [expected < 0.75 threshold]")
+print(f"  Random pair (euc)  : {euc_rand:.6f}   [expected > 0.72 threshold]")
+print(f"  Zeros vs Ones (cos): {cos_ext:.6f}")
+print(f"  Zeros vs Ones (euc): {euc_ext:.6f}")
+print("─" * 65)
+
+# Verdict
+if cos_rand > 0.98:
+    print("\n❌  FAIL  — Embeddings still DEGENERATE (cos ≈ 1.0 for different images)")
+    print("         MobileNetV2 fallback did not activate correctly.")
+elif cos_rand > 0.75:
+    print(f"\n⚠️  WARN  — Random images score {cos_rand:.3f} > 0.75 threshold → classified GENUINE")
+    print("         Consider lowering SIMILARITY_THRESHOLD to ~0.70.")
 else:
-    print(f"✅ Weights loaded correctly! Random images score {cos_diff:.3f} < 0.82 threshold.")
-    print("   The model should now correctly detect forged signatures.")
-print("=" * 60)
+    print(f"\n✅  PASS  — Random images score {cos_rand:.3f} < 0.75 threshold → correctly FORGED")
+    print("         Model is working. Remember to recompute existing DB embeddings:")
+    print("         python recompute_embeddings.py")
+print("=" * 65)
