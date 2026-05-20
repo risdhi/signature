@@ -269,7 +269,7 @@
 <thead>
 <tr class="text-on-surface-variant font-label-sm text-xs">
 <th class="px-6 py-2 uppercase tracking-wider">ID</th>
-<th class="px-6 py-2 uppercase tracking-wider">Pengguna</th>
+<th class="px-6 py-2 uppercase tracking-wider">Deskripsi</th>
 <th class="px-6 py-2 uppercase tracking-wider text-center">Test Image</th>
 <th class="px-6 py-2 uppercase tracking-wider">Prediction</th>
 <th class="px-6 py-2 uppercase tracking-wider">Voting Score</th>
@@ -282,9 +282,12 @@
 <tr class="glass-card table-row-hover transition-colors rounded-xl overflow-hidden">
 <td class="px-6 py-4 font-label-sm text-primary">#SV-{{ verification.id }}</td>
 <td class="px-6 py-4">
-<div class="flex flex-col">
-<span class="font-bold">{{ verification.user.full_name or verification.user.username }}</span>
-<span class="text-xs text-on-surface-variant">@{{ verification.user.username }}</span>
+<div class="flex flex-col max-w-xs">
+<span class="font-bold text-on-surface truncate" title="{{ verification.description or 'Tidak ada deskripsi' }}">{{ verification.description or 'Tidak ada deskripsi' }}</span>
+<span class="text-xs text-on-surface-variant">Target: {{ verification.user.full_name or verification.user.username }}</span>
+{% if verification.verified_by %}
+<span class="text-[10px] text-primary/80">Oleh: {{ verification.verified_by.full_name or verification.verified_by.username }}</span>
+{% endif %}
 </div>
 </td>
 <td class="px-6 py-4">

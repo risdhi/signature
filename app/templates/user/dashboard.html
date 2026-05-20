@@ -290,14 +290,35 @@
 </div>
 <h3 class="font-headline-md text-headline-md text-on-surface">Inspektor Verifikasi</h3>
 </div>
-<p class="font-body-md text-body-md text-on-surface-variant mb-6">Unggah 1 tanda tangan uji untuk dibandingkan dengan profil referensi terdaftar Anda.</p>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Unggah 1 tanda tangan uji untuk dibandingkan dengan profil referensi terdaftar.</p>
 {% if not user.is_registered %}
 <div class="p-4 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-300 font-body-md text-sm mb-4">
-  ⚠️ Anda belum mendaftarkan tanda tangan referensi. Upload minimal 2 referensi terlebih dahulu.
+  ⚠️ Anda belum mendaftarkan tanda tangan referensi Anda sendiri. Anda masih dapat melakukan verifikasi untuk pengguna terdaftar lainnya.
+</div>
+{% endif %}
+{% if not registered_users %}
+<div class="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 font-body-md text-sm mb-4">
+  ⚠️ Belum ada pengguna terdaftar dengan referensi tanda tangan di sistem.
 </div>
 {% endif %}
 <!-- Verify Form -->
 <form action="{{ url_for('web.verify', user_id=user.id) }}" method="POST" enctype="multipart/form-data" id="verifyForm">
+{% if registered_users %}
+<div class="mb-6">
+  <label for="targetUser" class="block font-body-md text-sm font-medium text-on-surface mb-2">Pilih User Target</label>
+  <select id="targetUser" name="target_user_id" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface focus:border-primary focus:ring-primary/20 transition-all font-body-md">
+      {% for u in registered_users %}
+          <option value="{{ u.id }}" {% if u.id == user.id %}selected{% endif %}>{{ u.full_name or u.username }} (@{{ u.username }})</option>
+      {% endfor %}
+  </select>
+</div>
+{% endif %}
+
+<div class="mb-6">
+  <label for="verificationDescription" class="block font-body-md text-sm font-medium text-on-surface mb-2">Deskripsi / Keterangan</label>
+  <textarea id="verificationDescription" name="description" rows="3" placeholder="Contoh: Verifikasi Dokumen Kontrak Kerja PT ABC..." class="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-4 py-3 text-on-surface placeholder:text-outline focus:border-primary focus:ring-primary/20 transition-all font-body-md"></textarea>
+</div>
+
 <label for="testFile" class="relative group cursor-pointer mb-6 block">
 <div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary opacity-20 group-hover:opacity-40 blur transition duration-1000 group-hover:duration-200"></div>
 <div class="relative bg-surface-container rounded-2xl p-10 border border-outline-variant/30 flex flex-col items-center justify-center text-center" id="dropTarget">
@@ -306,10 +327,10 @@
 <p class="font-label-sm text-label-sm text-outline mt-1">Hanya 1 file (PNG/JPG)</p>
 <img id="testPreview" class="hidden mt-4 max-h-32 rounded-xl border border-outline-variant/30 mx-auto" src="" alt="Preview">
 </div>
-<input type="file" id="testFile" name="file" accept="image/*" class="hidden" onchange="previewTestFile(this)" {% if not user.is_registered %}disabled{% endif %}>
+<input type="file" id="testFile" name="file" accept="image/*" class="hidden" onchange="previewTestFile(this)" {% if not registered_users %}disabled{% endif %}>
 </label>
 <div class="space-y-4">
-<button type="submit" id="verifyBtn" class="w-full bg-primary text-on-primary-container font-headline-md text-headline-md py-4 rounded-xl flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(192,193,255,0.3)] transition-all duration-500 group overflow-hidden relative {% if not user.is_registered %}opacity-50 cursor-not-allowed{% endif %}" onclick="return submitVerify(event)" {% if not user.is_registered %}disabled{% endif %}>
+<button type="submit" id="verifyBtn" class="w-full bg-primary text-on-primary-container font-headline-md text-headline-md py-4 rounded-xl flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(192,193,255,0.3)] transition-all duration-500 group overflow-hidden relative {% if not registered_users %}opacity-50 cursor-not-allowed{% endif %}" onclick="return submitVerify(event)" {% if not registered_users %}disabled{% endif %}>
 <span class="relative z-10 flex items-center gap-2">
 <span class="material-symbols-outlined">bolt</span>
   Jalankan AI Inspektor
@@ -429,6 +450,17 @@
             alert('Pilih file tanda tangan uji terlebih dahulu.');
             return false;
         }
+
+        // Set action dynamically to the selected user target ID
+        const targetUserSelect = document.getElementById('targetUser');
+        if (targetUserSelect) {
+            const userId = targetUserSelect.value;
+            const form = document.getElementById('verifyForm');
+            if (form) {
+                form.action = `/verify/${userId}`;
+            }
+        }
+
         const modal = document.getElementById('loadingModal');
         const progress = document.getElementById('progress-bar');
         modal.classList.remove('opacity-0', 'pointer-events-none');

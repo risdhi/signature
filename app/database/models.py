@@ -19,7 +19,7 @@ class User(db.Model):
     
     # Relationships
     reference_signatures = db.relationship('ReferenceSignature', backref='user', lazy='dynamic', cascade='all, delete-orphan')
-    verification_history = db.relationship('VerificationHistory', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    verification_history = db.relationship('VerificationHistory', foreign_keys='[VerificationHistory.user_id]', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     
     def set_password(self, password):
         from werkzeug.security import generate_password_hash
@@ -85,6 +85,12 @@ class VerificationHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     
+    # Who performed the verification (may differ from user_id/target)
+    verified_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    
+    # Description/context provided by the verifier
+    description = db.Column(db.String(500), nullable=True)
+    
     test_image_path = db.Column(db.String(255), nullable=False)
     processed_image_path = db.Column(db.String(255))
     result_image_path = db.Column(db.String(255))
@@ -109,6 +115,9 @@ class VerificationHistory(db.Model):
     verification_date = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     processing_time = db.Column(db.Float)  # seconds
     
+    # Relationship to the user who performed the verification
+    verified_by = db.relationship('User', foreign_keys=[verified_by_user_id], backref='verifications_performed')
+    
     def __repr__(self):
         return f'<VerificationHistory id={self.id} prediction={self.prediction}>'
     
@@ -116,6 +125,8 @@ class VerificationHistory(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'verified_by_user_id': self.verified_by_user_id,
+            'description': self.description,
             'prediction': self.prediction,
             'confidence': self.confidence,
             'average_similarity': self.average_similarity,

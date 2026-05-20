@@ -39,8 +39,9 @@ def require_login():
             return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
 
         if requested_user_id and requested_user_id != logged_in_user_id:
-            flash('Anda tidak memiliki akses ke halaman tersebut.', 'error')
-            return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
+            if request.endpoint not in ['web.verify', 'web.result']:
+                flash('Anda tidak memiliki akses ke halaman tersebut.', 'error')
+                return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
 
 
 @web_bp.route('/login', methods=['GET', 'POST'])
@@ -98,16 +99,27 @@ def user_portal(user_id):
 
         sig_count = user.reference_signatures.count()
         reference_signatures = user.reference_signatures.all()
-        history_list = user.verification_history.order_by(
+        
+        # Get history where the user is either the target or the verifier
+        history_list = db.session.query(VerificationHistory).filter(
+            (VerificationHistory.user_id == user_id) | (VerificationHistory.verified_by_user_id == user_id)
+        ).order_by(
             VerificationHistory.verification_date.desc()
         ).limit(10).all()
+
+        # Get all registered users (excluding admin) for the target verification dropdown
+        registered_users = db.session.query(User).filter(
+            User.is_registered == True,
+            User.username != 'admins'
+        ).all()
 
         return render_template(
             'user/dashboard.html',
             user=user,
             sig_count=sig_count,
             reference_signatures=reference_signatures,
-            history_list=history_list
+            history_list=history_list,
+            registered_users=registered_users
         )
     except Exception as e:
         logger.error(f"Error in user_portal: {str(e)}")
@@ -328,31 +340,33 @@ def verify(user_id):
                 # Save test image
                 test_image_path = save_uploaded_file(file, current_app.config['UPLOAD_FOLDER'])
                 
+                # Get verified_by_user_id (current logged in user) and description
+                verified_by_user_id = session.get('user_id')
+                description = request.form.get('description', '').strip()
+                
                 # Run verification
                 predictor = get_predictor(current_app.config)
                 result = predictor.verify_user_signature(
                     user_id,
                     test_image_path,
                     db.session,
-                    current_app.config
+                    current_app.config,
+                    verified_by_user_id=verified_by_user_id,
+                    description=description
                 )
                 
-                session['user_id'] = user_id
-                session['username'] = user.username
+                new_history = db.session.query(VerificationHistory).filter_by(user_id=user_id).order_by(
+                    VerificationHistory.verification_date.desc()
+                ).first()
                 
-                return redirect(url_for('web.result', user_id=user_id, history_id=
-                    db.session.query(VerificationHistory).filter_by(user_id=user_id).order_by(
-                        VerificationHistory.verification_date.desc()
-                    ).first().id
-                ))
+                return redirect(url_for('web.result', user_id=user_id, history_id=new_history.id))
                 
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error during verification: {str(e)}")
                 flash(f'Error: {str(e)}', 'error')
-                return redirect(url_for('web.user_portal', user_id=user_id))
+                return redirect(url_for('web.user_portal', user_id=session.get('user_id')))
         
-        reference_count = user.reference_signatures.count()
         # Verification form is embedded in user dashboard — redirect there
         return redirect(url_for('web.user_portal', user_id=user_id))
         
@@ -373,9 +387,6 @@ def result(user_id, history_id):
             flash('Result not found', 'error')
             return redirect(url_for('web.index'))
         
-        session['user_id'] = user_id
-        session['username'] = user.username
-        
         return render_template('result.html', user=user, history=history)
         
     except Exception as e:
@@ -394,12 +405,11 @@ def history(user_id):
             return redirect(url_for('web.register'))
         
         page = request.args.get('page', 1, type=int)
-        verifications = user.verification_history.order_by(
+        verifications = db.session.query(VerificationHistory).filter(
+            (VerificationHistory.user_id == user_id) | (VerificationHistory.verified_by_user_id == user_id)
+        ).order_by(
             VerificationHistory.verification_date.desc()
         ).paginate(page=page, per_page=10)
-        
-        session['user_id'] = user_id
-        session['username'] = user.username
         
         return render_template('history.html', user=user, verifications=verifications)
         

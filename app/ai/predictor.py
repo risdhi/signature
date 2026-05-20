@@ -181,7 +181,7 @@ class SiasesePredictorWrapper:
             logger.error(f"Error registering signatures: {str(e)}")
             raise
     
-    def verify_user_signature(self, user_id, test_image_path, db_session, config, timestamp=None):
+    def verify_user_signature(self, user_id, test_image_path, db_session, config, timestamp=None, verified_by_user_id=None, description=None):
         """
         Complete verification pipeline for a user
         
@@ -191,6 +191,8 @@ class SiasesePredictorWrapper:
             db_session: Database session
             config: Flask config
             timestamp: Optional timestamp for results
+            verified_by_user_id: Optional ID of the user performing the verification
+            description: Optional description/context
             
         Returns:
             Verification result with all metrics
@@ -253,6 +255,8 @@ class SiasesePredictorWrapper:
             # Create database record
             history = VerificationHistory(
                 user_id=user_id,
+                verified_by_user_id=verified_by_user_id,
+                description=description,
                 test_image_path=str(test_image_path),
                 processed_image_path=processed_path,
                 result_image_path=result_path,
