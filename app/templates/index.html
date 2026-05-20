@@ -30,6 +30,48 @@
     </div>
 
     <div class="recent-section">
+        <h3>Registered Users</h3>
+        {% if stats.users_list %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>References</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in stats.users_list %}
+                <tr>
+                    <td><strong>{{ u.username }}</strong></td>
+                    <td>{{ u.full_name or '-' }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        {% if u.is_registered %}
+                            <span class="badge badge-success">{{ u.reference_signatures.count() }} Signatures</span>
+                        {% else %}
+                            <span class="badge badge-error">Not Registered</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_registered %}
+                            <a href="{{ url_for('web.verify', user_id=u.id) }}" class="btn btn-secondary btn-sm" style="color: black; font-weight: bold; padding: 0.25rem 0.5rem; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; background: #e9ecef;">Verify Signature</a>
+                        {% else %}
+                            <a href="{{ url_for('web.upload_signatures', user_id=u.id) }}" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px;">Upload Signatures</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No registered users found</p>
+        {% endif %}
+    </div>
+
+    <div class="recent-section">
         <h3>Recent Verifications</h3>
         {% if stats.recent_verifications %}
         <table class="table">

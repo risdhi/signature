@@ -14,6 +14,91 @@ logger = logging.getLogger(__name__)
 web_bp = Blueprint('web', __name__)
 
 
+@web_bp.before_request
+def require_login():
+    # Allow static assets and authentication endpoints
+    allowed_endpoints = ['web.login', 'web.register', 'static']
+    if request.endpoint in allowed_endpoints:
+        return
+        
+    if not session.get('user_id'):
+        flash('Silakan login terlebih dahulu.', 'warning')
+        return redirect(url_for('web.login'))
+        
+    # Check roles and permissions
+    logged_in_user_id = session.get('user_id')
+    logged_in_username = session.get('username')
+    
+    # Check if request has user_id parameter
+    requested_user_id = request.view_args.get('user_id') if request.view_args else None
+    
+    if logged_in_username == 'admins':
+        # Admin is accessing a page
+        # If it's a page with user_id, make sure the user isn't 'admins' itself
+        if requested_user_id:
+            user = db.session.query(User).filter_by(id=requested_user_id).first()
+            if user and user.username == 'admins':
+                flash('Admin tidak dapat melakukan operasi ini pada akun admin.', 'error')
+                return redirect(url_for('web.index'))
+                
+            # "hanya bisa verify" - admin cannot upload signatures or go to user portal
+            if request.endpoint in ['web.user_portal', 'web.upload_signatures']:
+                flash('Sebagai admin, Anda hanya dapat memverifikasi tanda tangan.', 'info')
+                return redirect(url_for('web.verify', user_id=requested_user_id))
+    else:
+        # Regular user is accessing a page
+        # They can only access their own user pages
+        if requested_user_id and requested_user_id != logged_in_user_id:
+            flash('Anda tidak memiliki akses ke halaman tersebut.', 'error')
+            return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
+            
+        # They cannot access the admin dashboard
+        if request.endpoint == 'web.index':
+            return redirect(url_for('web.user_portal', user_id=logged_in_user_id))
+
+
+@web_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """User and Admin Login"""
+    if session.get('user_id'):
+        if session.get('username') == 'admins':
+            return redirect(url_for('web.index'))
+        else:
+            return redirect(url_for('web.user_portal', user_id=session.get('user_id')))
+            
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        if not username or not password:
+            flash('Username dan password harus diisi', 'error')
+            return render_template('login.html')
+            
+        # Fetch user
+        user = db.session.query(User).filter_by(username=username).first()
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash(f'Selamat datang kembali, {user.full_name or user.username}!', 'success')
+            
+            if user.username == 'admins':
+                return redirect(url_for('web.index'))
+            else:
+                return redirect(url_for('web.user_portal', user_id=user.id))
+        else:
+            flash('Username atau password salah', 'error')
+            
+    return render_template('login.html')
+
+
+@web_bp.route('/logout')
+def logout():
+    """Logout user"""
+    session.clear()
+    flash('Anda telah berhasil logout.', 'success')
+    return redirect(url_for('web.login'))
+
+
 @web_bp.route('/user/<int:user_id>')
 def user_portal(user_id):
     """User portal - upload & verify in one page"""
@@ -54,13 +139,17 @@ def index():
             prediction='FORGED'
         ).count()
         
+        # List of all registered users (excluding admin) for selection
+        users_list = db.session.query(User).filter(User.username != 'admins').all()
+        
         stats = {
             'total_users': total_users,
             'registered_users': registered_users,
             'total_verifications': total_verifications,
             'genuine_count': genuine_count,
             'forged_count': forged_count,
-            'recent_verifications': recent_verifications[:5]
+            'recent_verifications': recent_verifications[:5],
+            'users_list': users_list
         }
         
         return render_template('index.html', stats=stats)
@@ -78,9 +167,15 @@ def register():
             username = request.form.get('username', '').strip()
             email = request.form.get('email', '').strip()
             full_name = request.form.get('full_name', '').strip()
+            password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
             
-            if not username or not email:
-                flash('Username and email are required', 'error')
+            if not username or not email or not password:
+                flash('Username, email, and password are required', 'error')
+                return redirect(url_for('web.register'))
+                
+            if password != confirm_password:
+                flash('Passwords do not match', 'error')
                 return redirect(url_for('web.register'))
             
             # Check if user exists
@@ -95,13 +190,18 @@ def register():
                 email=email,
                 full_name=full_name
             )
+            user.set_password(password)
             db.session.add(user)
             db.session.commit()
             
-            session['user_id'] = user.id
-            session['username'] = user.username
-            
-            flash(f'User {username} created! Now upload your signatures.', 'success')
+            # If not logged in as admin, log in as the newly created user
+            if session.get('username') != 'admins':
+                session['user_id'] = user.id
+                session['username'] = user.username
+                flash(f'User {username} created! Now upload your signatures.', 'success')
+            else:
+                flash(f'User {username} created successfully! You can now upload signatures for them.', 'success')
+                
             return redirect(url_for('web.upload_signatures', user_id=user.id))
             
         except Exception as e:

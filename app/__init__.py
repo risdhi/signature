@@ -43,5 +43,27 @@ def create_app(config_name='development'):
     def internal_error(error):
         db.session.rollback()
         return {'error': 'Internal server error'}, 500
+        
+    # Seed hardcoded admin user
+    try:
+        with app.app_context():
+            from app.database.models import User
+            admin = User.query.filter_by(username='admins').first()
+            if not admin:
+                admin = User(
+                    username='admins',
+                    email='admin@signature.ai',
+                    full_name='System Admin',
+                    is_registered=True
+                )
+                admin.set_password('123456')
+                db.session.add(admin)
+                db.session.commit()
+            else:
+                admin.set_password('123456')
+                admin.is_registered = True
+                db.session.commit()
+    except Exception as e:
+        app.logger.warning(f"Could not seed admin user (tables might not exist yet): {e}")
     
     return app

@@ -283,17 +283,17 @@ class SignaturePreprocessor:
 _preprocessor = None
 
 
-def get_preprocessor(target_size=(299, 299)):
+def get_preprocessor(target_size=(105, 105)):
     """Get or create preprocessor instance"""
     global _preprocessor
     
-    if _preprocessor is None:
+    if _preprocessor is None or _preprocessor.target_size != target_size:
         _preprocessor = SignaturePreprocessor(target_size)
     
     return _preprocessor
 
 
-def preprocess_signature(image_path, output_path=None):
+def preprocess_signature(image_path, output_path=None, target_size=(105, 105)):
     """Preprocess signature image"""
-    preprocessor = get_preprocessor()
+    preprocessor = get_preprocessor(target_size)
     return preprocessor.process(image_path, output_path)

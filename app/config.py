@@ -40,12 +40,15 @@ class Config:
     
     # Siamese Network Configuration
     EMBEDDING_DIM = 128
-    SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', 0.82))
-    DISTANCE_THRESHOLD = float(os.getenv('DISTANCE_THRESHOLD', 0.25))
+    # Thresholds for MobileNetV2 L2-normalized embeddings.
+    # For unit vectors: euclidean_dist = sqrt(2*(1-cos_sim))
+    # Adjust SIMILARITY_THRESHOLD and DISTANCE_THRESHOLD together.
+    SIMILARITY_THRESHOLD = float(os.getenv('SIMILARITY_THRESHOLD', 0.75))
+    DISTANCE_THRESHOLD = float(os.getenv('DISTANCE_THRESHOLD', 0.72))
     
-    # Image Preprocessing
-    IMG_SIZE = (105, 105)  # Match actual Siamese model input shape
-    IMG_CHANNELS = 1      # Grayscale (1 channel)
+    # Image Preprocessing — 128x128 for MobileNetV2, 105x105 for custom Siamese
+    IMG_SIZE = (128, 128)
+    IMG_CHANNELS = 3      # RGB for MobileNetV2
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
@@ -59,7 +62,7 @@ class Config:
     # Verification
     MIN_REFERENCE_SIGNATURES = 2
     MAX_REFERENCE_SIGNATURES = 5
-    VOTING_THRESHOLD = 0.7  # 70% signatures must match for GENUINE
+    VOTING_THRESHOLD = float(os.getenv('VOTING_THRESHOLD', 0.6))  # 60% must match for GENUINE
 
 
 class DevelopmentConfig(Config):

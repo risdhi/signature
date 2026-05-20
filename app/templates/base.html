@@ -15,8 +15,23 @@
                 <h1>📝 Signature Verification AI</h1>
             </div>
             <div class="navbar-menu">
-                <a href="{{ url_for('web.index') }}" class="nav-link">Dashboard</a>
-                <a href="{{ url_for('web.register') }}" class="nav-link">Register</a>
+                {% if session.get('user_id') %}
+                    {% if session.get('username') == 'admins' %}
+                        <a href="{{ url_for('web.index') }}" class="nav-link">Dashboard</a>
+                        <a href="{{ url_for('web.register') }}" class="nav-link">Register User</a>
+                    {% else %}
+                        <a href="{{ url_for('web.user_portal', user_id=session.get('user_id')) }}" class="nav-link">Portal</a>
+                        <a href="{{ url_for('web.verify', user_id=session.get('user_id')) }}" class="nav-link">Verify</a>
+                        <a href="{{ url_for('web.history', user_id=session.get('user_id')) }}" class="nav-link">History</a>
+                    {% endif %}
+                    <span class="nav-user" style="font-weight: bold; color: var(--dark-color); margin-left: 1rem;">
+                        👤 {{ session.get('username') }}
+                    </span>
+                    <a href="{{ url_for('web.logout') }}" class="nav-link" style="color: var(--error-color);">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('web.login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('web.register') }}" class="nav-link">Register</a>
+                {% endif %}
             </div>
         </div>
     </nav>

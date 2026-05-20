@@ -97,10 +97,14 @@ class SimilarityMetrics:
 class VerificationThreshold:
     """Manage verification thresholds"""
     
-    # Adaptive thresholds
-    COSINE_THRESHOLD = 0.82  # Must be >= this value
-    DISTANCE_THRESHOLD = 0.25  # Must be <= this value (L2)
-    VOTING_THRESHOLD = 0.7  # 70% must vote genuine
+    # Thresholds calibrated for MobileNetV2 L2-normalized 128-dim embeddings.
+    # For unit vectors: euclidean_dist = sqrt(2 * (1 - cos_sim))
+    # cos_sim=0.75 ↔ euclidean_dist≈0.707
+    # cos_sim=0.82 ↔ euclidean_dist≈0.600
+    # NOTE: If the custom Siamese model loads correctly, re-calibrate to 0.82 / 0.25.
+    COSINE_THRESHOLD = 0.75   # Must be >= this value
+    DISTANCE_THRESHOLD = 0.72  # Must be <= this value (Euclidean, L2-normalized vectors)
+    VOTING_THRESHOLD = 0.6    # 60% must vote genuine
     
     @staticmethod
     def is_similar_cosine(similarity, threshold=None):
@@ -120,7 +124,7 @@ class VerificationThreshold:
 class VerificationEngine:
     """Main verification engine using Siamese network approach"""
     
-    def __init__(self, cosine_threshold=0.82, distance_threshold=0.25, voting_threshold=0.7):
+    def __init__(self, cosine_threshold=0.75, distance_threshold=0.72, voting_threshold=0.6):
         """
         Initialize verification engine
         

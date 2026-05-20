@@ -83,7 +83,7 @@ class SiasesePredictorWrapper:
             processed_image = preprocess_signature(image_path, processed_output_path)
             
             # Extract embedding
-            embedding = self.embedding_extractor.extract_embedding(image_path)
+            embedding = self.embedding_extractor.extract_embedding(processed_output_path)
             
             return embedding, processed_output_path
             

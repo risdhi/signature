@@ -12,6 +12,7 @@ class User(db.Model):
     username = db.Column(db.String(120), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     full_name = db.Column(db.String(200))
+    password_hash = db.Column(db.String(255), nullable=True)
     is_registered = db.Column(db.Boolean, default=False)
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -20,6 +21,16 @@ class User(db.Model):
     reference_signatures = db.relationship('ReferenceSignature', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     verification_history = db.relationship('VerificationHistory', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     
+    def set_password(self, password):
+        from werkzeug.security import generate_password_hash
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
+        
+    def check_password(self, password):
+        from werkzeug.security import check_password_hash
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
+
     def __repr__(self):
         return f'<User {self.username}>'
     
