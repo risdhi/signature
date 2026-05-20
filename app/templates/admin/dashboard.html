@@ -101,6 +101,36 @@
     </style>
 </head>
 <body class="flex min-h-screen">
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md w-full">
+      {% for category, message in messages %}
+        <div class="p-4 rounded-xl shadow-2xl backdrop-blur-xl border flex items-center justify-between transition-all duration-300 transform translate-y-0
+          {% if category == 'success' %}
+            bg-emerald-950/80 text-emerald-300 border-emerald-500/30
+          {% elif category == 'error' %}
+            bg-rose-950/80 text-rose-300 border-rose-500/30
+          {% elif category == 'warning' %}
+            bg-amber-950/80 text-amber-300 border-amber-500/30
+          {% else %}
+            bg-blue-950/80 text-blue-300 border-blue-500/30
+          {% endif %}"
+          role="alert"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined">
+              {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% elif category == 'warning' %}warning{% else %}info{% endif %}
+            </span>
+            <span class="font-body-md text-sm">{{ message }}</span>
+          </div>
+          <button class="text-on-surface-variant hover:text-white ml-4 font-bold" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <!-- SideNavBar Component -->
 <aside class="flex flex-col h-full sticky top-0 left-0 h-screen w-64 border-r border-outline-variant/20 bg-surface-container-low/60 backdrop-blur-xl shrink-0 z-40">
 <div class="p-6">
@@ -111,33 +141,25 @@
 </div>
 <div>
 <p class="font-body-md text-sm font-bold text-on-surface">SigVerify Admin</p>
-<p class="font-label-sm text-[10px] text-primary">Forensic Level 4</p>
+<p class="font-label-sm text-[10px] text-primary">System Controller</p>
 </div>
 </div>
 <nav class="space-y-2">
 <!-- Active Tab: Dashboard -->
-<a class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary/10 text-primary border-r-4 border-primary transition-all duration-200 ease-in-out" href="#">
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary/10 text-primary border-r-4 border-primary transition-all duration-200 ease-in-out" href="{{ url_for('web.admin_dashboard') }}">
 <span class="material-symbols-outlined">dashboard</span>
 <span class="font-label-sm text-label-sm">Dashboard</span>
 </a>
-<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant/30 transition-all duration-200 ease-in-out" href="#">
-<span class="material-symbols-outlined">qr_code_scanner</span>
-<span class="font-label-sm text-label-sm">Verifikasi Baru</span>
-</a>
-<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant/30 transition-all duration-200 ease-in-out" href="#">
-<span class="material-symbols-outlined">database</span>
-<span class="font-label-sm text-label-sm">Basis Data</span>
-</a>
-<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant/30 transition-all duration-200 ease-in-out" href="#">
-<span class="material-symbols-outlined">history_edu</span>
-<span class="font-label-sm text-label-sm">Audit Log</span>
+<a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant/30 transition-all duration-200 ease-in-out" href="{{ url_for('web.register') }}">
+<span class="material-symbols-outlined">person_add</span>
+<span class="font-label-sm text-label-sm">Registrasi Baru</span>
 </a>
 </nav>
 </div>
 <div class="mt-auto p-6 space-y-4">
     
 <div class="pt-4 border-t border-outline-variant/20 space-y-2">
-<a class="flex items-center space-x-3 px-4 py-2 text-on-surface-variant hover:text-error transition-colors" href="#">
+<a class="flex items-center space-x-3 px-4 py-2 text-on-surface-variant hover:text-error transition-colors" href="{{ url_for('web.logout') }}">
 <span class="material-symbols-outlined">logout</span>
 <span class="font-label-sm text-label-sm">Keluar</span>
 </a>
@@ -160,141 +182,141 @@
 <div class="glass-card p-6 rounded-2xl transition-transform hover:scale-[1.02] duration-300">
 <div class="flex justify-between items-start mb-4">
 <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">group</span>
-<span class="text-xs font-label-sm text-secondary">+12% bln ini</span>
+<span class="text-xs font-label-sm text-secondary">Sistem Aktif</span>
 </div>
-<p class="font-label-sm text-on-surface-variant mb-1">Total Pengguna Terdaftar</p>
-<h3 class="font-display-lg text-4xl text-on-surface">12,842</h3>
+<p class="font-label-sm text-on-surface-variant mb-1">Total Pengguna</p>
+<h3 class="font-display-lg text-4xl text-on-surface">{{ stats.get('total_users', 0) }}</h3>
 </div>
 <div class="glass-card p-6 rounded-2xl transition-transform hover:scale-[1.02] duration-300">
 <div class="flex justify-between items-start mb-4">
 <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">analytics</span>
-<span class="text-xs font-label-sm text-secondary">Live Data</span>
+<span class="text-xs font-label-sm text-secondary">Total Scans</span>
 </div>
-<p class="font-label-sm text-on-surface-variant mb-1">Total Scan Hari Ini</p>
-<h3 class="font-display-lg text-4xl text-on-surface">1,402</h3>
+<p class="font-label-sm text-on-surface-variant mb-1">Total Verifikasi</p>
+<h3 class="font-display-lg text-4xl text-on-surface">{{ stats.get('total_verifications', 0) }}</h3>
 </div>
 <div class="glass-card p-6 rounded-2xl transition-transform hover:scale-[1.02] duration-300">
 <div class="flex justify-between items-start mb-4">
 <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">verified</span>
-<span class="text-xs font-label-sm text-primary">Target: 99%</span>
+<span class="text-xs font-label-sm text-primary">Rata-Rata</span>
 </div>
-<p class="font-label-sm text-on-surface-variant mb-1">Akurasi Sistem (Avg Confidence)</p>
-<h3 class="font-display-lg text-4xl text-on-surface">98.4%</h3>
+<p class="font-label-sm text-on-surface-variant mb-1">Tingkat Keyakinan (Confidence)</p>
+<h3 class="font-display-lg text-4xl text-on-surface">{{ "%.1f"|format(stats.get('avg_confidence', 0)) }}%</h3>
 </div>
 </div>
+
+<!-- Users List Section -->
+<section class="mb-xl">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-md text-on-surface">Basis Data Pengguna</h3>
+<a href="{{ url_for('web.register') }}" class="px-4 py-2 text-xs font-label-sm bg-primary text-on-primary-container rounded-lg hover:shadow-[0_0_15px_rgba(192,193,255,0.3)] transition-all font-bold">+ Daftar Pengguna Baru</a>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left border-separate border-spacing-y-3">
+<thead>
+<tr class="text-on-surface-variant font-label-sm text-xs">
+<th class="px-6 py-2 uppercase tracking-wider">Username</th>
+<th class="px-6 py-2 uppercase tracking-wider">Nama Lengkap</th>
+<th class="px-6 py-2 uppercase tracking-wider">Email</th>
+<th class="px-6 py-2 uppercase tracking-wider">Status Referensi</th>
+<th class="px-6 py-2 uppercase tracking-wider">Aksi</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-sm">
+{% for u in stats.get('users_list', []) %}
+<tr class="glass-card table-row-hover transition-colors rounded-xl overflow-hidden">
+<td class="px-6 py-4">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-sm">person</span>
+<span class="font-bold text-on-surface">{{ u.username }}</span>
+</div>
+</td>
+<td class="px-6 py-4">{{ u.full_name or '-' }}</td>
+<td class="px-6 py-4 text-on-surface-variant">{{ u.email }}</td>
+<td class="px-6 py-4">
+{% if u.is_registered %}
+<span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-secondary/10 text-secondary border border-secondary/30">{{ u.reference_signatures.count() }} Tanda Tangan</span>
+{% else %}
+<span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-tertiary-container/20 text-tertiary border border-tertiary-container/40">Belum Terdaftar</span>
+{% endif %}
+</td>
+<td class="px-6 py-4">
+<div class="flex space-x-2">
+{% if u.is_registered %}
+<a href="{{ url_for('web.verify', user_id=u.id) }}" class="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary/20 transition-all text-xs font-semibold">Verifikasi</a>
+{% endif %}
+<a href="{{ url_for('web.upload_signatures', user_id=u.id) }}" class="px-3 py-1 bg-surface-variant/50 text-on-surface-variant rounded-lg border border-outline-variant/30 hover:bg-surface-variant transition-all text-xs font-semibold">Upload Referensi</a>
+</div>
+</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="5" class="text-center py-8 text-on-surface-variant font-label-sm">Tidak ada data pengguna terdaftar.</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+
 <!-- Scan History Section -->
 <section class="mb-xl">
 <div class="flex justify-between items-center mb-6">
 <h3 class="font-headline-md text-on-surface">Riwayat Verifikasi Terbaru</h3>
-<div class="flex space-x-2">
-<button class="px-4 py-2 text-xs font-label-sm border border-outline-variant/30 rounded-lg hover:bg-surface-variant/30 transition-colors">Unduh Laporan</button>
-<button class="px-4 py-2 text-xs font-label-sm bg-surface-variant/50 border border-outline-variant/30 rounded-lg">Filter</button>
-</div>
 </div>
 <div class="w-full overflow-x-auto">
 <table class="w-full text-left border-separate border-spacing-y-3">
 <thead>
 <tr class="text-on-surface-variant font-label-sm text-xs">
 <th class="px-6 py-2 uppercase tracking-wider">ID</th>
-<th class="px-6 py-2 uppercase tracking-wider">User</th>
+<th class="px-6 py-2 uppercase tracking-wider">Pengguna</th>
 <th class="px-6 py-2 uppercase tracking-wider text-center">Test Image</th>
 <th class="px-6 py-2 uppercase tracking-wider">Prediction</th>
 <th class="px-6 py-2 uppercase tracking-wider">Voting Score</th>
-<th class="px-6 py-2 uppercase tracking-wider">Time</th>
-<th class="px-6 py-2 uppercase tracking-wider">Actions</th>
+<th class="px-6 py-2 uppercase tracking-wider">Waktu</th>
+<th class="px-6 py-2 uppercase tracking-wider">Aksi</th>
 </tr>
 </thead>
 <tbody class="font-body-md text-sm">
-<!-- Row 1 -->
+{% for verification in stats.get('recent_verifications', []) %}
 <tr class="glass-card table-row-hover transition-colors rounded-xl overflow-hidden">
-<td class="px-6 py-4 font-label-sm text-primary">#SV-9021</td>
+<td class="px-6 py-4 font-label-sm text-primary">#SV-{{ verification.id }}</td>
 <td class="px-6 py-4">
 <div class="flex flex-col">
-<span class="font-bold">Andi Pratama</span>
-<span class="text-xs text-on-surface-variant">Bank Central Asia</span>
+<span class="font-bold">{{ verification.user.full_name or verification.user.username }}</span>
+<span class="text-xs text-on-surface-variant">@{{ verification.user.username }}</span>
 </div>
 </td>
 <td class="px-6 py-4">
-<div class="w-12 h-12 mx-auto rounded-lg overflow-hidden border border-outline-variant/30">
-<img class="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all" data-alt="A macro close-up of a digital document signature showing complex ink textures and paper fibers. The lighting is sterile and cool-toned, emphasizing the intricate details for forensic analysis. The aesthetic is professional and clinical, with a deep indigo and slate color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9eq8iFieh0OjGGyRdbmQ9J19e1Dv-DIVmS3vml5EDZhOOK6iGCWE3riAPzNWLbAOEmH-q0yxYT4ru3twu0RgyOxfZ8bFxzo-mK59ZrDH8HxK0LDnlwJpMULV4rid9-7VELT7B-KhjS2tSmTTLb40f1JxKZf8BnP89dIHsldXjuXeBuqRRUjcoHe0oMVfBkX_UhqllLfCkL5JywrKIYvtcx3UdJO3JV6OAvZwgvCAv3zt_am1qfoPR6B14sHnMYfBlYNlq32-w21Z0"/>
+<div class="w-12 h-12 mx-auto rounded-lg overflow-hidden border border-outline-variant/30 bg-surface-container-lowest/50 flex items-center justify-center">
+<img class="max-h-full max-w-full object-contain grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all" src="{{ url_for('static', filename=verification.test_image_path | static_upload) }}"/>
 </div>
 </td>
 <td class="px-6 py-4">
+{% if verification.prediction == 'GENUINE' %}
 <span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-secondary/10 text-secondary border border-secondary/30">GENUINE</span>
-</td>
-<td class="px-6 py-4 font-label-sm">
-<div class="flex items-center">
-<span class="text-on-surface">5/5</span>
-<div class="ml-2 w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
-<div class="bg-secondary h-full" style="width: 100%"></div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 text-on-surface-variant">09:42:15 WIB</td>
-<td class="px-6 py-4">
-<button class="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary/20 transition-all">Lihat Detail</button>
-</td>
-</tr>
-<!-- Row 2 -->
-<tr class="glass-card table-row-hover transition-colors rounded-xl overflow-hidden">
-<td class="px-6 py-4 font-label-sm text-primary">#SV-9020</td>
-<td class="px-6 py-4">
-<div class="flex flex-col">
-<span class="font-bold">Siska Wijaya</span>
-<span class="text-xs text-on-surface-variant">KPK RI</span>
-</div>
-</td>
-<td class="px-6 py-4">
-<div class="w-12 h-12 mx-auto rounded-lg overflow-hidden border border-outline-variant/30">
-<img class="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all" data-alt="A microscopic view of an artificial neural network visualization overlaid on a digital fingerprint scan. The imagery is highly technical and futuristic, featuring neon-teal glowing nodes and indigo background textures. The style is cinematic cyber-security, focusing on precision and authentication." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBXbHX_lbQC1_Z_B_TUjyuscirG-1EZnfsNcSkVx3X3h3asxPH4Hg-jsjaR53RcPYO3V2hzabIjJ_67zOrx32rUkH4lDditl8tjmusPAVCdTMdaBIPv3Lea4rZ-_7yeH-WDcz3zOjkZZswQZoTuSkOOJefyrrJ9zBDZm6QjdsU0fByAsc01Paj4sRBuWoHMbX9dikZnrz77ly5czuS8lBFVd79-OOlbfaao3SruUNbdPt0TgY0bqYeApjiB6HowxQgAdvs0DHWET5i"/>
-</div>
-</td>
-<td class="px-6 py-4">
+{% else %}
 <span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-tertiary-container/20 text-tertiary border border-tertiary-container/40">FORGED</span>
+{% endif %}
 </td>
 <td class="px-6 py-4 font-label-sm">
 <div class="flex items-center">
-<span class="text-on-surface">4/5</span>
+<span class="text-on-surface">{{ verification.matched_signatures }}/{{ verification.total_signatures }}</span>
 <div class="ml-2 w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
-<div class="bg-tertiary-container h-full" style="width: 80%"></div>
+<div class="{% if verification.prediction == 'GENUINE' %}bg-secondary{% else %}bg-tertiary-container{% endif %} h-full" style="width: {{ (verification.matched_signatures / (verification.total_signatures or 1)) * 100 }}%"></div>
 </div>
 </div>
 </td>
-<td class="px-6 py-4 text-on-surface-variant">09:38:02 WIB</td>
+<td class="px-6 py-4 text-on-surface-variant">{{ verification.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
 <td class="px-6 py-4">
-<button class="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary/20 transition-all">Lihat Detail</button>
+<a href="{{ url_for('web.result', user_id=verification.user_id, history_id=verification.id) }}" class="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary/20 transition-all text-xs font-semibold">Lihat Detail</a>
 </td>
 </tr>
-<!-- Row 3 -->
-<tr class="glass-card table-row-hover transition-colors rounded-xl overflow-hidden">
-<td class="px-6 py-4 font-label-sm text-primary">#SV-9019</td>
-<td class="px-6 py-4">
-<div class="flex flex-col">
-<span class="font-bold">Budi Santoso</span>
-<span class="text-xs text-on-surface-variant">Notaris Publik JKT</span>
-</div>
-</td>
-<td class="px-6 py-4">
-<div class="w-12 h-12 mx-auto rounded-lg overflow-hidden border border-outline-variant/30">
-<img class="w-full h-full object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all" data-alt="Abstract representation of high-tech data scanning. Blue laser lines pass over a surface with complex etched circuitry and crystalline structures. The lighting is moody and dark with sharp cyan highlights, creating a sense of deep forensic digital investigation and high-stakes security monitoring." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBP9VA4NFh5hjQf-sY3OQMtkUHID8F0slsC-8dkapRwIYfnlBi5I7QbZoHbkKH0DkSbHPRAkRVDGOMESJ74cWMtEgrrCSC6r5qzM3hOEu7p-dzD0iWo5GPS-ZRDKOGD-Mpkz8VqeJn3YwLY9OuJr5JUg79IYHpfY4S2BR9lBfTeCXKreT1d_lb5KMMBMEiAKBXMgV2FQIrfg08yqMf6fRxfa_TugmDpDtm0Rj5mkmIcuvUKeZ5AfK5ngqTyvk5MVQu7ndt6WqTGwBjo"/>
-</div>
-</td>
-<td class="px-6 py-4">
-<span class="px-3 py-1 rounded-full text-[10px] font-status-caps bg-secondary/10 text-secondary border border-secondary/30">GENUINE</span>
-</td>
-<td class="px-6 py-4 font-label-sm">
-<div class="flex items-center">
-<span class="text-on-surface">5/5</span>
-<div class="ml-2 w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
-<div class="bg-secondary h-full" style="width: 100%"></div>
-</div>
-</div>
-</td>
-<td class="px-6 py-4 text-on-surface-variant">09:12:44 WIB</td>
-<td class="px-6 py-4">
-<button class="px-3 py-1 bg-primary/10 text-primary rounded-lg border border-primary/20 hover:bg-primary/20 transition-all">Lihat Detail</button>
-</td>
+{% else %}
+<tr>
+<td colspan="7" class="text-center py-8 text-on-surface-variant font-label-sm">Belum ada riwayat verifikasi.</td>
 </tr>
+{% endfor %}
 </tbody>
 </table>
 </div>
@@ -302,12 +324,6 @@
 <!-- Footer -->
 <footer class="w-full py-12 flex flex-col md:flex-row justify-between items-center border-t border-outline-variant/20 mt-xl">
 <p class="font-label-sm text-on-surface-variant">© 2024 SigVerify.AI Forensics. Seluruh hak cipta dilindungi.</p>
-<div class="flex space-x-6 mt-4 md:mt-0">
-<a class="font-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privasi</a>
-<a class="font-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Syarat</a>
-<a class="font-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">API</a>
-<a class="font-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Kontak</a>
-</div>
 </footer>
 </main>
 <script>
@@ -320,6 +336,12 @@
                 card.style.setProperty('--mouse-x', `${x}px`);
                 card.style.setProperty('--mouse-y', `${y}px`);
             });
+        });
+        document.querySelectorAll(".material-symbols-outlined").forEach((span) => {
+          if (!span.innerText.trim()) {
+            const iconName = span.getAttribute("data-icon");
+            if (iconName) span.innerText = iconName;
+          }
         });
     </script>
 </body></html>

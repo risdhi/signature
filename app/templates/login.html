@@ -189,9 +189,25 @@
       }
     </style>
   </head>
-  <body
-    class="min-h-screen flex flex-col items-center justify-center p-sm selection:bg-primary/30"
-  >
+  <body class="min-h-screen flex flex-col items-center justify-center p-sm selection:bg-primary/30">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-md w-full">
+          {% for category, message in messages %}
+            <div class="p-4 rounded-xl shadow-2xl backdrop-blur-xl border flex items-center justify-between
+              {% if category == 'success' %}bg-emerald-950/80 text-emerald-300 border-emerald-500/30
+              {% elif category == 'error' %}bg-rose-950/80 text-rose-300 border-rose-500/30
+              {% elif category == 'warning' %}bg-amber-950/80 text-amber-300 border-amber-500/30
+              {% else %}bg-blue-950/80 text-blue-300 border-blue-500/30{% endif %}" role="alert">
+              <span class="font-body-md text-sm">{{ message }}</span>
+              <button onclick="this.parentElement.remove()" class="ml-4 font-bold">✕</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <!-- Top Branding -->
     <header class="mb-lg text-center animate-fade-in">
       <h1

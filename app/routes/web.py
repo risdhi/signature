@@ -62,7 +62,9 @@ def login():
             flash('Username dan password harus diisi', 'error')
             return render_template('login.html', selected_role=selected_role)
 
-        user = db.session.query(User).filter_by(username=username).first()
+        user = db.session.query(User).filter(
+            (User.username == username) | (User.email == username)
+        ).first()
         if user and user.check_password(password):
             session['user_id'] = user.id
             session['username'] = user.username
@@ -87,7 +89,7 @@ def logout():
 
 @web_bp.route('/user/<int:user_id>')
 def user_portal(user_id):
-    """User portal - upload signatures only."""
+    """User portal - upload signatures and verify."""
     try:
         user = db.session.query(User).filter_by(id=user_id).first()
         if not user:
@@ -95,7 +97,18 @@ def user_portal(user_id):
             return redirect(url_for('web.register'))
 
         sig_count = user.reference_signatures.count()
-        return render_template('user_portal.html', user=user, sig_count=sig_count)
+        reference_signatures = user.reference_signatures.all()
+        history_list = user.verification_history.order_by(
+            VerificationHistory.verification_date.desc()
+        ).limit(10).all()
+
+        return render_template(
+            'user/dashboard.html',
+            user=user,
+            sig_count=sig_count,
+            reference_signatures=reference_signatures,
+            history_list=history_list
+        )
     except Exception as e:
         logger.error(f"Error in user_portal: {str(e)}")
         flash(f'Error: {str(e)}', 'error')
@@ -138,21 +151,27 @@ def admin_dashboard():
         
         users_list = db.session.query(User).filter(User.username != 'admins').all()
         
+        # Calculate system accuracy (average confidence)
+        avg_confidence = db.session.query(
+            db.func.avg(VerificationHistory.confidence)
+        ).scalar() or 0.0
+        
         stats = {
             'total_users': total_users,
             'registered_users': registered_users,
             'total_verifications': total_verifications,
             'genuine_count': genuine_count,
             'forged_count': forged_count,
-            'recent_verifications': recent_verifications[:5],
-            'users_list': users_list
+            'recent_verifications': recent_verifications,
+            'users_list': users_list,
+            'avg_confidence': float(avg_confidence)
         }
         
-        return render_template('index.html', stats=stats)
+        return render_template('admin/dashboard.html', stats=stats)
     except Exception as e:
         logger.error(f"Error in admin_dashboard: {str(e)}")
         flash(f"Error loading dashboard: {str(e)}", 'error')
-        return render_template('index.html', stats={})
+        return render_template('admin/dashboard.html', stats={})
 
 
 @web_bp.route('/register', methods=['GET', 'POST'])
@@ -272,7 +291,7 @@ def upload_signatures(user_id):
                 db.session.rollback()
                 logger.error(f"Error registering signatures: {str(e)}")
                 flash(f'Error: {str(e)}', 'error')
-                return redirect(request.url)
+                return redirect(url_for('web.user_portal', user_id=user_id))
         
         return render_template('register.html', user=user, upload_page=True)
         
@@ -331,10 +350,11 @@ def verify(user_id):
                 db.session.rollback()
                 logger.error(f"Error during verification: {str(e)}")
                 flash(f'Error: {str(e)}', 'error')
-                return redirect(request.url)
+                return redirect(url_for('web.user_portal', user_id=user_id))
         
         reference_count = user.reference_signatures.count()
-        return render_template('verify.html', user=user, reference_count=reference_count)
+        # Verification form is embedded in user dashboard — redirect there
+        return redirect(url_for('web.user_portal', user_id=user_id))
         
     except Exception as e:
         logger.error(f"Error in verify: {str(e)}")
