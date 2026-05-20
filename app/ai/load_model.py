@@ -199,7 +199,7 @@ class ModelLoader:
         from tensorflow.keras.applications import MobileNetV2
         from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
         from tensorflow.keras.layers import (
-            Dense, GlobalAveragePooling2D, Input, Lambda, BatchNormalization
+            Dense, GlobalAveragePooling2D, Input, Lambda
         )
         from tensorflow.keras.models import Model as KerasModel
 
@@ -220,12 +220,23 @@ class ModelLoader:
         x = base(x, training=False)
 
         x = GlobalAveragePooling2D(name='gap')(x)
-        x = Dense(embedding_dim, activation=None, name='embedding_dense')(x)
-        x = BatchNormalization(name='embedding_bn')(x)
+        
+        if embedding_dim != 1280:
+            dense_layer = Dense(embedding_dim, activation=None, use_bias=False, name='embedding_dense')
+            x = dense_layer(x)
+            
         # L2 normalize so cosine similarity = dot product
         x = Lambda(lambda v: tf.math.l2_normalize(v, axis=1), name='l2_norm')(x)
 
         model = KerasModel(inputs=inp, outputs=x, name='mobilenet_embedding')
+        
+        if embedding_dim != 1280:
+            # Set weights deterministically using a fixed random seed
+            np.random.seed(42)
+            projection_matrix = np.random.normal(size=(1280, embedding_dim)).astype(np.float32)
+            q, _ = np.linalg.qr(projection_matrix)
+            dense_layer.set_weights([q])
+            
         logger.info(f"MobileNetV2 model built. Input: {model.input_shape}, Output: {model.output_shape}")
         return model
 

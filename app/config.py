@@ -39,7 +39,7 @@ class Config:
     ))
     
     # Siamese Network Configuration
-    EMBEDDING_DIM = 128
+    EMBEDDING_DIM = 1280
     # Thresholds for MobileNetV2 L2-normalized embeddings.
     # For unit vectors: euclidean_dist = sqrt(2*(1-cos_sim))
     # Adjust SIMILARITY_THRESHOLD and DISTANCE_THRESHOLD together.
