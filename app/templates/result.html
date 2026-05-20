@@ -1,359 +1,150 @@
-{% extends "base.html" %}
-
-{% block title %}Verification Result - Signature Verification{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Verification Result - Signature
+Verification{% endblock %} {% block content %}
 <section class="result-section">
-    <h2>Verification Result</h2>
+  <h2>Verification Result</h2>
 
-    <div class="result-container {% if history.prediction == 'GENUINE' %}result-genuine{% else %}result-forged{% endif %}">
-        <div class="result-header">
-            <div class="prediction-badge">
-                {% if history.prediction == 'GENUINE' %}
-                <span class="badge-icon">✓</span>
-                <span class="prediction-text">GENUINE</span>
-                {% else %}
-                <span class="badge-icon">✕</span>
-                <span class="prediction-text">FORGED</span>
-                {% endif %}
-            </div>
-            <div class="confidence-display">
-                <p class="confidence-label">Confidence Score</p>
-                <p class="confidence-value">{{ "%.1f"|format(history.confidence) }}%</p>
-                <div class="confidence-bar">
-                    <div class="confidence-fill" style="width: {{ history.confidence }}%"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <h4>Average Similarity</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.average_similarity or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Max Similarity</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.max_similarity or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Min Similarity</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.min_similarity or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Euclidean Distance</h4>
-                <p class="metric-value">{{ "%.4f"|format(history.euclidean_distance or 0) }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Matched Signatures</h4>
-                <p class="metric-value">{{ history.matched_signatures }}/{{ history.total_signatures }}</p>
-            </div>
-            <div class="metric-card">
-                <h4>Voting Score</h4>
-                <p class="metric-value">{{ "%.1f"|format(history.voting_score * 100) }}%</p>
-            </div>
-        </div>
-
-        <div class="details-section">
-            <h3>📊 Detailed Metrics</h3>
-            <table class="details-table">
-                <tr>
-                    <td>Prediction:</td>
-                    <td><strong>{{ history.prediction }}</strong></td>
-                </tr>
-                <tr>
-                    <td>Confidence:</td>
-                    <td>{{ "%.2f"|format(history.confidence) }}%</td>
-                </tr>
-                <tr>
-                    <td>Matched Signatures:</td>
-                    <td>{{ history.matched_signatures }} out of {{ history.total_signatures }}</td>
-                </tr>
-                <tr>
-                    <td>Voting Score:</td>
-                    <td>{{ "%.2f"|format(history.voting_score * 100) }}%</td>
-                </tr>
-                <tr>
-                    <td>Cosine Similarity:</td>
-                    <td>{{ "%.4f"|format(history.cosine_similarity or 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Average Distance:</td>
-                    <td>{{ "%.4f"|format(history.euclidean_distance or 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Processing Time:</td>
-                    <td>{{ "%.3f"|format(history.processing_time or 0) }} seconds</td>
-                </tr>
-                <tr>
-                    <td>Verification Date:</td>
-                    <td>{{ history.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                </tr>
-            </table>
-        </div>
-
-        {% if history.similarity_scores %}
-        <div class="similarity-details">
-            <h3>📈 Similarity with Each Reference</h3>
-            <div class="similarity-list">
-                {% for similarity in history.similarity_scores %}
-                <div class="similarity-item">
-                    <span>Reference #{{ loop.index }}</span>
-                    <div class="similarity-bar-small">
-                        <div class="similarity-fill" style="width: {{ similarity * 100 }}%"></div>
-                    </div>
-                    <span class="similarity-score">{{ "%.4f"|format(similarity) }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+  <div
+    class="result-container {% if history.prediction == 'GENUINE' %}result-genuine{% else %}result-forged{% endif %}"
+  >
+    <div class="result-header">
+      <div class="prediction-badge">
+        {% if history.prediction == 'GENUINE' %}
+        <span class="badge-icon">✓</span>
+        <span class="prediction-text">GENUINE</span>
+        {% else %}
+        <span class="badge-icon">✕</span>
+        <span class="prediction-text">FORGED</span>
         {% endif %}
+      </div>
+      <div class="confidence-display">
+        <p class="confidence-label">Confidence Score</p>
+        <p class="confidence-value">{{ "%.1f"|format(history.confidence) }}%</p>
+        <div class="confidence-bar">
+          <div
+            class="confidence-fill"
+            style="width: {{ history.confidence }}%"
+          ></div>
+        </div>
+      </div>
     </div>
 
-    <div class="action-buttons">
-        <a href="{{ url_for('web.verify', user_id=history.user_id) }}" class="btn btn-primary">Verify Another</a>
-        <a href="{{ url_for('web.history', user_id=history.user_id) }}" class="btn btn-secondary">View History</a>
-        <a href="{{ url_for('web.index') }}" class="btn btn-outline">Dashboard</a>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h4>Average Similarity</h4>
+        <p class="metric-value">
+          {{ "%.4f"|format(history.average_similarity or 0) }}
+        </p>
+      </div>
+      <div class="metric-card">
+        <h4>Max Similarity</h4>
+        <p class="metric-value">
+          {{ "%.4f"|format(history.max_similarity or 0) }}
+        </p>
+      </div>
+      <div class="metric-card">
+        <h4>Min Similarity</h4>
+        <p class="metric-value">
+          {{ "%.4f"|format(history.min_similarity or 0) }}
+        </p>
+      </div>
+      <div class="metric-card">
+        <h4>Euclidean Distance</h4>
+        <p class="metric-value">
+          {{ "%.4f"|format(history.euclidean_distance or 0) }}
+        </p>
+      </div>
+      <div class="metric-card">
+        <h4>Matched Signatures</h4>
+        <p class="metric-value">
+          {{ history.matched_signatures }}/{{ history.total_signatures }}
+        </p>
+      </div>
+      <div class="metric-card">
+        <h4>Voting Score</h4>
+        <p class="metric-value">
+          {{ "%.1f"|format(history.voting_score * 100) }}%
+        </p>
+      </div>
     </div>
+
+    <div class="details-section">
+      <h3>📊 Detailed Metrics</h3>
+      <table class="details-table">
+        <tr>
+          <td>Prediction:</td>
+          <td><strong>{{ history.prediction }}</strong></td>
+        </tr>
+        <tr>
+          <td>Confidence:</td>
+          <td>{{ "%.2f"|format(history.confidence) }}%</td>
+        </tr>
+        <tr>
+          <td>Matched Signatures:</td>
+          <td>
+            {{ history.matched_signatures }} out of {{ history.total_signatures
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td>Voting Score:</td>
+          <td>{{ "%.2f"|format(history.voting_score * 100) }}%</td>
+        </tr>
+        <tr>
+          <td>Cosine Similarity:</td>
+          <td>{{ "%.4f"|format(history.cosine_similarity or 0) }}</td>
+        </tr>
+        <tr>
+          <td>Average Distance:</td>
+          <td>{{ "%.4f"|format(history.euclidean_distance or 0) }}</td>
+        </tr>
+        <tr>
+          <td>Processing Time:</td>
+          <td>{{ "%.3f"|format(history.processing_time or 0) }} seconds</td>
+        </tr>
+        <tr>
+          <td>Verification Date:</td>
+          <td>{{ history.verification_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        </tr>
+      </table>
+    </div>
+
+    {% if history.similarity_scores %}
+    <div class="similarity-details">
+      <h3>📈 Similarity with Each Reference</h3>
+      <div class="similarity-list">
+        {% for similarity in history.similarity_scores %}
+        <div class="similarity-item">
+          <span>Reference #{{ loop.index }}</span>
+          <div class="similarity-bar-small">
+            <div
+              class="similarity-fill"
+              style="width: {{ similarity * 100 }}%"
+            ></div>
+          </div>
+          <span class="similarity-score">{{ "%.4f"|format(similarity) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="action-buttons">
+    <a
+      href="{{ url_for('web.verify', user_id=history.user_id) }}"
+      class="btn btn-primary"
+      >Verify Another</a
+    >
+    <a
+      href="{{ url_for('web.history', user_id=history.user_id) }}"
+      class="btn btn-secondary"
+      >View History</a
+    >
+    <a href="{{ url_for('web.index') }}" class="btn btn-outline">Dashboard</a>
+  </div>
 </section>
 
-<style>
-.result-section {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-}
-
-.result-container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-    overflow: hidden;
-    border-left: 5px solid;
-}
-
-.result-genuine {
-    border-left-color: #28a745;
-}
-
-.result-forged {
-    border-left-color: #dc3545;
-}
-
-.result-header {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    padding: 2rem;
-    text-align: center;
-}
-
-.prediction-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.badge-icon {
-    font-size: 3rem;
-    font-weight: bold;
-}
-
-.result-genuine .badge-icon {
-    color: #28a745;
-}
-
-.result-forged .badge-icon {
-    color: #dc3545;
-}
-
-.prediction-text {
-    font-size: 1.8rem;
-    font-weight: bold;
-}
-
-.result-genuine .prediction-text {
-    color: #28a745;
-}
-
-.result-forged .prediction-text {
-    color: #dc3545;
-}
-
-.confidence-display {
-    margin: 1rem 0;
-}
-
-.confidence-label {
-    margin: 0 0 0.5rem 0;
-    color: #666;
-    font-size: 0.95rem;
-}
-
-.confidence-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #0066cc;
-    margin: 0;
-}
-
-.confidence-bar {
-    width: 100%;
-    height: 20px;
-    background: #e0e0e0;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-}
-
-.confidence-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #0066cc, #00cc66);
-    transition: width 0.3s ease;
-}
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    padding: 2rem;
-}
-
-.metric-card {
-    background: #f9f9f9;
-    padding: 1rem;
-    border-radius: 6px;
-    text-align: center;
-    border: 1px solid #eee;
-}
-
-.metric-card h4 {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.85rem;
-    color: #666;
-    text-transform: uppercase;
-}
-
-.metric-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #0066cc;
-    margin: 0;
-}
-
-.details-section, .similarity-details {
-    padding: 2rem;
-    border-top: 1px solid #eee;
-}
-
-.details-section h3, .similarity-details h3 {
-    margin-top: 0;
-    color: #333;
-}
-
-.details-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.details-table tr {
-    border-bottom: 1px solid #eee;
-}
-
-.details-table td {
-    padding: 0.75rem;
-}
-
-.details-table td:first-child {
-    color: #666;
-    font-weight: 600;
-    width: 40%;
-}
-
-.similarity-list {
-    display: grid;
-    gap: 1rem;
-}
-
-.similarity-item {
-    display: grid;
-    grid-template-columns: 80px 1fr 60px;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem;
-    background: #f9f9f9;
-    border-radius: 4px;
-}
-
-.similarity-bar-small {
-    width: 100%;
-    height: 16px;
-    background: #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.similarity-fill {
-    height: 100%;
-    background: #0066cc;
-    transition: width 0.3s ease;
-}
-
-.similarity-score {
-    font-weight: 600;
-    color: #0066cc;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin: 2rem 0;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s;
-    display: inline-block;
-}
-
-.btn-primary {
-    background: #0066cc;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #0052a3;
-    transform: translateY(-2px);
-}
-
-.btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #5a6268;
-}
-
-.btn-outline {
-    background: white;
-    color: #0066cc;
-    border: 2px solid #0066cc;
-}
-
-.btn-outline:hover {
-    background: #0066cc;
-    color: white;
-}
-</style>
-
 <script>
-// Add enumerate filter for Jinja2
+  // Add enumerate filter for Jinja2
 </script>
 {% endblock %}

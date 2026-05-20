@@ -1,68 +1,89 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Signature Verification System{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
     {% block extra_css %}{% endblock %}
-</head>
-<body>
+  </head>
+  <body class="app-body">
     <!-- Navigation -->
     <nav class="navbar">
-        <div class="container">
-            <div class="navbar-brand">
-                <h1>📝 Signature Verification AI</h1>
-            </div>
-            <div class="navbar-menu">
-                {% if session.get('user_id') %}
-                    {% if session.get('username') == 'admins' %}
-                        <a href="{{ url_for('web.index') }}" class="nav-link">Dashboard</a>
-                        <a href="{{ url_for('web.register') }}" class="nav-link">Register User</a>
-                    {% else %}
-                        <a href="{{ url_for('web.user_portal', user_id=session.get('user_id')) }}" class="nav-link">Portal</a>
-                        <a href="{{ url_for('web.verify', user_id=session.get('user_id')) }}" class="nav-link">Verify</a>
-                        <a href="{{ url_for('web.history', user_id=session.get('user_id')) }}" class="nav-link">History</a>
-                    {% endif %}
-                    <span class="nav-user" style="font-weight: bold; color: var(--dark-color); margin-left: 1rem;">
-                        👤 {{ session.get('username') }}
-                    </span>
-                    <a href="{{ url_for('web.logout') }}" class="nav-link" style="color: var(--error-color);">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('web.login') }}" class="nav-link">Login</a>
-                    <a href="{{ url_for('web.register') }}" class="nav-link">Register</a>
-                {% endif %}
-            </div>
+      <div class="container">
+        <div class="navbar-brand">
+          <h1>📝 Signature Verification AI</h1>
         </div>
+        <div class="navbar-menu">
+          {% if session.get('user_id') %} {% if session.get('username') ==
+          'admins' %}
+          <a href="{{ url_for('web.index') }}" class="nav-link">Dashboard</a>
+          <a href="{{ url_for('web.register') }}" class="nav-link"
+            >Register User</a
+          >
+          {% else %}
+          <a
+            href="{{ url_for('web.user_portal', user_id=session.get('user_id')) }}"
+            class="nav-link"
+            >Portal</a
+          >
+          <a
+            href="{{ url_for('web.verify', user_id=session.get('user_id')) }}"
+            class="nav-link"
+            >Verify</a
+          >
+          <a
+            href="{{ url_for('web.history', user_id=session.get('user_id')) }}"
+            class="nav-link"
+            >History</a
+          >
+          {% endif %}
+          <span class="nav-user"> 👤 {{ session.get('username') }} </span>
+          <a href="{{ url_for('web.logout') }}" class="nav-link nav-link-logout"
+            >Logout</a>
+          {% endif %}
+        </div>
+      </div>
     </nav>
 
     <!-- Flash Messages -->
     <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                        <button class="alert-close">&times;</button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">
+        {{ message }}
+        <button class="alert-close">&times;</button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
     </div>
 
     <!-- Main Content -->
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
+    <main class="container">{% block content %}{% endblock %}</main>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 Signature Verification System. AI-Powered Forensic Verification</p>
-        </div>
+      <div class="container">
+        <p>
+          &copy; 2024 Signature Verification System. AI-Powered Forensic
+          Verification
+        </p>
+      </div>
     </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block extra_js %}{% endblock %}
-</body>
+  </body>
 </html>
